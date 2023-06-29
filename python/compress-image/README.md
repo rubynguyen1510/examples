@@ -1,6 +1,6 @@
 # 🖼️ Compress Image with TinyPNG 
 
-A Python Cloud Function for compressing images without losing quality using [Tinypng API] (https://tinypng.com/)
+A Python Cloud Function for compressing images without losing quality using [Tinypng API](https://tinypng.com/).
 
 
 _Example input:_
