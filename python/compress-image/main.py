@@ -1,9 +1,12 @@
-res = None
+from krakenio import Client
 import base64
 import tinify
 import tempfile
 import os
 import json
+
+
+
 
 '''
 input base 64 format : iVBORw0KGgoAAAANSUhEUgAAAaQAAALiCAY...QoH9hbkTPQAAAABJRU5ErkJggg== 
@@ -20,6 +23,8 @@ output : encoded base 64
 def encode(plaintext):
     encoded = base64.b64encode(plaintext)
     return encoded
+
+res = None
 
 def main(req, res):
   try:
@@ -47,12 +52,26 @@ def main(req, res):
 
     if provider == 'krakenio':
       api_secret_key = variable['SECRET_API_KEY']
-      return res.json(
+      # Authenticate the API Key and Secret Key
+      api = Client(api_key, api_secret_key)
+      data = {
+          'wait': True,
+          'dev': True
+      }
+
+      result = api.upload(decoded_image_path, data);
+
+      if result.get('success'):
+          optimized_image_url = result.get('kraked_url')
+          encoded_optimized_image = base64.urlsafe_b64encode(optimized_image_url)
+          return res.json(
           {
-              "success": True,
-              "image" : 123
+            "success:" : True,
+            "image": str(encoded_optimized_image)
           })
-        
+      else:
+        return res.json({"success": False, "message": "krakenio failed to compress image"})
+
     elif provider == 'tinypng':
       # Authenticating api key
       tinify.key = api_key
