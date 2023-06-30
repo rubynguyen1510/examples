@@ -4,7 +4,7 @@ import tinify
 import tempfile
 import os
 import json
-
+import requests
 
 
 
@@ -61,7 +61,7 @@ def main(req, res):
           'dev': True
       }
       # Uploading the decoded_image_path to the KrakenIO
-      result = api.upload(decoded_image_path, data);
+      result = api.upload(decoded_image_path, data)
       if result.get('success'):
           optimized_image_url = result.get('kraked_url')
           # Opening the newly created file and writing to the empty file
