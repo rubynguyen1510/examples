@@ -69,6 +69,7 @@ def main(req, res):
               optimized_image = requests.get(optimized_image_url, stream=True).content
               f.write(optimized_image)
       else:
+        os.rmdir(temp_dir)
         return res.json({"success": False, "message": "krakenio failed to compress image"})
     else:
       # Authenticating api key
@@ -81,7 +82,7 @@ def main(req, res):
     o = open(optimized_image_path, "rb")
     encoded_optimized_image = encode(o.read())
     o.close()
-    
+    os.rmdir(temp_dir)
     # Return a response in JSON
     return res.json(
     {
