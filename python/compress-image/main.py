@@ -6,30 +6,14 @@ import json
 import requests
 
 # There is an error with KrakenIO for Python3. We provided a solution by replacing init.py inside KrakenIO.
-init_file_path = "/usr/local/src/userlib/__init__.py"
-kraken_replace_path = "/usr/local/src/userlib/runtime-env/lib/python3.10/site-packages/krakenio/__init__.py"
+init_file_path = os.getcwd() + "/userlib/__init__.py"
+kraken_replace_path = os.getcwd() + "/userlib/runtime-env/lib/python3.10/site-packages/krakenio/__init__.py"
 
 init_file = open(init_file_path, "rt")
 with open(kraken_replace_path, "w") as kraken_file:
   kraken_file.write(init_file.read())
 os.remove(init_file_path)
 from krakenio import Client
-
-'''
-input base 64 format : iVBORw0KGgoAAAANSUhEUgAAAaQAAALiCAY...QoH9hbkTPQAAAABJRU5ErkJggg== 
-output : bytes 
-'''
-def decode(encoded_value):
-    decoded = base64.b64decode(encoded_value)
-    return decoded
-
-'''
-input : open media file, bytes
-output : encoded base 64 
-'''
-def encode(plaintext):
-    encoded = base64.b64encode(plaintext)
-    return encoded
 
 '''
 input: variable, api_key, decoded_image_path, optimized_image_path
@@ -55,29 +39,53 @@ def krakenioImpl(variable, api_key, api_secret_key, decoded_image_path, optimize
   return False
 
 def tinypngImpl(api_key, decoded_image_path, optimized_image_path):
-  # Authenticating Tinypng API Key
-  tinify.key = api_key
-  # Compress image using Tinypng and write it to optimized image path.
-  optimized_image = tinify.from_file(decoded_image_path)
-  optimized_image.to_file(optimized_image_path)
-  return True
+  try:
+    # Authenticating Tinypng API Key
+    tinify.key = api_key
+    # Compress image using Tinypng and write it to optimized image path.
+    optimized_image = tinify.from_file(decoded_image_path)
+    optimized_image.to_file(optimized_image_path)
+    return True
+  except Exception as e:
+     print(e)
+     return False
 
 def main(req, res):
   try:
     # Accessing payload
     payload = req.payload
+    if payload == {}:
+       raise ValueError("Missing payload")
+    
     # Accessing provider from payload
     provider = payload['provider']
+    if provider is None or provider.lower() not in ['krakenio', 'tinypng']:
+        raise ValueError("Invalid provider.")
+    
     # Acccessing variables
     variable = req.variables
+    if variable == {}:
+      raise ValueError("Missing variables.")
+    
     # Accessing api_key from variables
     api_key = variable['API_KEY']
+    if api_key == "":
+        raise ValueError("Missing API key.")
+    
+    # Get secret key if krakenio
     if provider == "krakenio":
       api_secret_key = variable['SECRET_API_KEY']
+      if api_secret_key == "":
+          raise ValueError("Missing API secret key.")
+
     # Accessing encoded image from payload
     encoded_image = payload['image']
+    if encoded_image == "":
+        raise ValueError("Missing encoded image.")
+    
+
     # Decoding the encoded image
-    decoded_image = decode(encoded_image)
+    decoded_image = base64.b64decode(encoded_image)
     # Create a temp directory inside of the current working directory. Prefix it as "temp"
     temp_dir = tempfile.mkdtemp(prefix='temp', dir=os.getcwd())
     # Generate a copy of the decoded image data as non_optimized.jpg
@@ -97,7 +105,7 @@ def main(req, res):
 
   # Run the api function
   sucessful = False
-  if provider == 'krakenio':
+  if provider.lower() == 'krakenio':
     sucessful = krakenioImpl(variable, api_key, api_secret_key, decoded_image_path, optimized_image_path)
   else:
     sucessful = tinypngImpl(api_key, decoded_image_path, optimized_image_path)
@@ -105,15 +113,13 @@ def main(req, res):
 
   # Package by encoding the file in base64 format
   o = open(optimized_image_path, "rb")
-  encoded_optimized_image = encode(o.read())
+  encoded_optimized_image = base64.b64encode(o.read())
   o.close()
-
 
   # Delete the decoded image and the optimized image, then delete the temporary directory
   # os.remove(decoded_image_path)
   # os.remove(optimized_image_path)
   # os.rmdir(temp_dir)
-
 
   # Return a response in JSON
   if sucessful: 
