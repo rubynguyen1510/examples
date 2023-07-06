@@ -1,0 +1,1 @@
+{"response":{"message":"Missing encoded image.","success":false},"stdout":""}

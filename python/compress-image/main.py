@@ -122,9 +122,9 @@ def main(req, res):
   o.close()
 
   # Delete the decoded image and the optimized image, then delete the temporary directory
-  os.remove(decoded_image_path)
-  os.remove(optimized_image_path)
-  os.rmdir(temp_dir)
+  # os.remove(decoded_image_path)
+  # os.remove(optimized_image_path)
+  # os.rmdir(temp_dir)
 
   # Return a response in JSON
   if sucessful: 

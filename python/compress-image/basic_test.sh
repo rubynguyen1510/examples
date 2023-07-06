@@ -20,14 +20,14 @@ curl http://localhost:3000/ -H "X-Internal-Challenge: secret-key" -H "Content-Ty
 printf '\n'
 
 
-# printf "5.  3.7 MB file -> tinypng\n"
-# file_content=$(cat image_test/3.7_mb.txt)
-# data="{\"payload\": {\"provider\": \"tinypng\", \"image\": \"$file_content\" }, \"variables\": { \"API_KEY\": \"R4nM3B54NbHNcHblC0XXl0LZyV82PBgZ\" } }"
-# curl http://localhost:3000/ -H "X-Internal-Challenge: secret-key" -H "Content-Type: application/json" -d "$data" -o image_test/image_test_output/3.7MB_Tinypng.txt
-# printf '\n'
+printf "5.  3.7 MB file -> tinypng\n"
+file_content=$(cat image_test/3.7_mb.txt)
+data="{\"payload\": {\"provider\": \"tinypng\", \"image\": \"$file_content\" }, \"variables\": { \"API_KEY\": \"R4nM3B54NbHNcHblC0XXl0LZyV82PBgZ\" } }"
+curl http://localhost:3000/ -H "X-Internal-Challenge: secret-key" -H "Content-Type: application/json" -d "$data" -o image_test/image_test_output/3.7MB_Tinypng.txt
+printf '\n'
 
-# printf "6.  3.7 MB file -> krakenio\n"
-# file_content=$(cat image_test/3.7_mb.txt)
-# data="{\"payload\": {\"provider\": \"tinypng\", \"image\": \"$file_content\" }, \"variables\": { \"API_KEY\": \"R4nM3B54NbHNcHblC0XXl0LZyV82PBgZ\", \"SECRET_API_KEY\": \"7bbd29dd53c00a068b7ebe20b074540a0d7cea9d\"} }"
-# curl http://localhost:3000/ -H "X-Internal-Challenge: secret-key" -H "Content-Type: application/json" -d "$data" -o image_test/image_test_output/3.7MB_Kraken.txt
-# printf '\n'
+printf "6.  3.7 MB file -> krakenio\n"
+file_content=$(cat image_test/3.7_mb.txt)
+data="{\"payload\": {\"provider\": \"tinypng\", \"image\": \"$file_content\" }, \"variables\": { \"API_KEY\": \"R4nM3B54NbHNcHblC0XXl0LZyV82PBgZ\", \"SECRET_API_KEY\": \"7bbd29dd53c00a068b7ebe20b074540a0d7cea9d\"} }"
+curl http://localhost:3000/ -H "X-Internal-Challenge: secret-key" -H "Content-Type: application/json" -d "$data" -o image_test/image_test_output/3.7MB_Kraken.txt
+printf '\n'
