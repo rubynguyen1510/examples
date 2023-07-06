@@ -86,8 +86,8 @@ def main(req, res):
 
     # Accessing encoded image from payload
     encoded_image = payload['image']
-    if encoded_image == "":
-      raise ValueError("Missing encoded image.")
+    # if encoded_image == "":
+    #   raise ValueError("Missing encoded image.")
 
     # Decoding the encoded image
     decoded_image = base64.b64decode(encoded_image)
