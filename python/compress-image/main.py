@@ -18,11 +18,12 @@ from krakenio import Client
 '''
 input: variable, api_key, decoded_image_path, optimized_image_path
 '''
-def krakenioImpl(variable, api_key, api_secret_key, decoded_image_path, optimized_image_path):
+def krakenioImpl(api_key, api_secret_key, decoded_image_path, optimized_image_path):
   # Authenticate the API Key and Secret Key
   api = Client(api_key, api_secret_key)
   data = {
       'wait': True,
+      # If you are testing, make sure to have dev -> True. If false then we will use API data.
       'dev': True
   }
   # Uploading the decoded_image_path to the KrakenIO
@@ -35,20 +36,24 @@ def krakenioImpl(variable, api_key, api_secret_key, decoded_image_path, optimize
     with open(optimized_image_path, 'wb') as f:
         optimized_image = requests.get(optimized_image_url, stream=True).content
         f.write(optimized_image)
-    return True
+
+    # Check if the api compression worked. Compares the optimized file and the original file sizes.
+    if os.path.getsize(optimized_image_path) < os.path.getsize(decoded_image_path):
+       return True
   return False
 
 def tinypngImpl(api_key, decoded_image_path, optimized_image_path):
-  try:
-    # Authenticating Tinypng API Key
-    tinify.key = api_key
-    # Compress image using Tinypng and write it to optimized image path.
-    optimized_image = tinify.from_file(decoded_image_path)
-    optimized_image.to_file(optimized_image_path)
-    return True
-  except Exception as e:
-     print(e)
-     return False
+  # Authenticating Tinypng API Key
+  tinify.key = api_key
+  # Compress image using Tinypng and write it to optimized image path.
+  optimized_image = tinify.from_file(decoded_image_path)
+  optimized_image.to_file(optimized_image_path)
+
+  # Check if the api compression worked. Compares the optimized file and the original file sizes.
+
+  if os.path.getsize(optimized_image_path) < os.path.getsize(decoded_image_path):
+     return True
+  return False
 
 def main(req, res):
   try:
@@ -106,7 +111,7 @@ def main(req, res):
   # Run the api function
   sucessful = False
   if provider.lower() == 'krakenio':
-    sucessful = krakenioImpl(variable, api_key, api_secret_key, decoded_image_path, optimized_image_path)
+    sucessful = krakenioImpl(api_key, api_secret_key, decoded_image_path, optimized_image_path)
   else:
     sucessful = tinypngImpl(api_key, decoded_image_path, optimized_image_path)
     
@@ -117,9 +122,9 @@ def main(req, res):
   o.close()
 
   # Delete the decoded image and the optimized image, then delete the temporary directory
-  # os.remove(decoded_image_path)
-  # os.remove(optimized_image_path)
-  # os.rmdir(temp_dir)
+  os.remove(decoded_image_path)
+  os.remove(optimized_image_path)
+  os.rmdir(temp_dir)
 
   # Return a response in JSON
   if sucessful: 
