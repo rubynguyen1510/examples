@@ -2,26 +2,24 @@ import base64
 import tinify
 import tempfile
 import os
-import json
 import requests
 
-'''
-input base 64 format : iVBORw0KGgoAAAANSUhEUgAAAaQAAALiCAY...QoH9hbkTPQAAAABJRU5ErkJggg== 
-output : bytes 
-'''
-# There is an error with KrakenIO for Python3. We provided a solution by replacing init.py inside KrakenIO.
+# There is an error with KrakenIO for Python3. 
+# We provided a solution by replacing init.py inside KrakenIO.
 init_file_path = os.getcwd() + "/userlib/__init__.py"
 kraken_replace_path = os.getcwd() + "/userlib/runtime-env/lib/python3.10/site-packages/krakenio/__init__.py"
 
 init_file = open(init_file_path, "rt")
 with open(kraken_replace_path, "w") as kraken_file:
-  kraken_file.write(init_file.read())
+    kraken_file.write(init_file.read())
 os.remove(init_file_path)
 from krakenio import Client
 
 
 def check_size(optimized_image_path, decoded_image_path):
-  return os.path.getsize(optimized_image_path) < os.path.getsize(decoded_image_path)
+    optimize_size = os.path.getsize(optimized_image_path)
+    decode_size = os.path.getsize(decoded_image_path)
+    return optimize_size < decode_size
 
 
 '''
