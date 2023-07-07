@@ -94,25 +94,16 @@ def main(req, res):
         return res.json({"success": False, "message": str(message)})
 
     # Run the api function
-    successful = False
     if provider.lower() == 'krakenio':
-        kraken = krakenio_impl(api_key, api_secret_key, decoded_image)
-        if kraken['success']:
-            optimized_image = kraken['optimized_image']
-            successful = True
+        result = krakenio_impl(api_key, api_secret_key, decoded_image)
     else:
-        tinypng = tinypng_impl(api_key, decoded_image)
-        if tinypng['success']:
-            optimized_image = tinypng['optimized_image']
-            successful = True
-
-    # Package by encoding the file in base64 format
-    encoded_optimized_image = base64.b64encode(optimized_image)
+        result = tinypng_impl(api_key, decoded_image)
 
     # Return a response in JSON
-    if successful:
+    if result['success']:
+        optimized_image = result['optimized_image']
         return res.json({"success:": True,
-                         "image": str(encoded_optimized_image)})
+                         "image": str(base64.b64encode(optimized_image))})
     else:
         return res.json({"success:": False, "image":
                          "Image failed to compress."})
