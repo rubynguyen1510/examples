@@ -1,2 +1,1 @@
 tinify==1.6.0
-krakenio==0.1.0
