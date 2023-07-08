@@ -4,29 +4,32 @@ import tinify
 import json
 
 
-def krakenio_impl(api_key, api_secret_key, decoded_image):
+def krakenio_impl(variables):
     # Kraken Url for uploading media
     url = 'https://api.kraken.io/v1/'
     api_endpoint = url + 'upload'
 
     # Headers for post request
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.85 Safari/537.36'
+        'User-Agent':
+        'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.85 Safari/537.36'
     }
     # File that we will pass in
-    files = {
-            'file': decoded_image
-    }
+    files = {'file': variables['decoded_image']}
     # Parameters for post request
     params = {
         "auth": {
-            "api_key": api_key,
-            "api_secret": api_secret_key
+            "api_key": variables['api_key'],
+            "api_secret":variables['api_secret_key']
         },
         "wait": True,  # Optional: Wait for the optimization to complete
         "dev": False  # Optional: Set to false to use API
     }
-    response = requests.post(url=api_endpoint, headers=headers, files=files, data={'data': json.dumps(params)}, timeout=10)
+    response = requests.post(url=api_endpoint,
+                             headers=headers,
+                             files=files,
+                             data={'data': json.dumps(params)},
+                             timeout=10)
 
     # Check status code of response
     if response.status_code == 200:
@@ -40,70 +43,75 @@ def krakenio_impl(api_key, api_secret_key, decoded_image):
                 "optimized_image": requests.get(optimized_url).content
             }
     else:
-        return {
-            "success": False
-        }
+        raise ValueError("KrakenIO failed to compress.")
 
 
-def tinypng_impl(api_key, decoded_image):
-    tinify.key = api_key
-    result_data = tinify.from_buffer(decoded_image).to_buffer()
-    return {
-        "success": True,
-        "optimized_image": result_data
+def tinypng_impl(variables):
+    tinify.key = variables['api_key']
+    result_data = tinify.from_buffer(variables['decoded_image']).to_buffer()
+    return {"success": True, "optimized_image": result_data}
+
+
+def errorMessage(res, message):
+    return res.json({
+        "success": False,
+        "message": message,
+    })
+
+
+def validate_payload(req):
+    # Accessing payload
+    if req.payload == {}:
+        raise ValueError("Missing payload")
+
+    # Accessing provider from payload
+    if req.payload['provider'] is None or req.payload['provider'].lower(
+    ) not in ['krakenio', 'tinypng']:
+        raise ValueError("Invalid provider.")
+
+    # Acccessing variables
+    if req.variables == {}:
+        raise ValueError("Missing variables.")
+
+    # Accessing api_key from variables
+    if req.variables['API_KEY'] == "":
+        raise ValueError("Missing API key.")
+
+    # Accessing encoded image from payload
+    if req.payload['image'] == "":
+        raise ValueError("Missing encoded image.")
+
+    result = {
+        "provider": req.payload['provider'],
+        "api_key": req.variables['API_KEY'],
+        "decoded_image": base64.b64decode(req.payload['image'])
     }
+
+    # Get secret key
+    if req.payload['provider'] == "krakenio":
+        if req.variables['SECRET_API_KEY'] == "":
+            raise ValueError("Missing api secret key.")
+        result["api_secret_key"] = req.variables['SECRET_API_KEY']
+    return result
 
 
 def main(req, res):
     try:
-        # Accessing payload
-        payload = req.payload
-        if payload == {}:
-            raise ValueError("Missing payload")
-
-        # Accessing provider from payload
-        provider = payload['provider']
-        if provider is None or provider.lower() not in ['krakenio', 'tinypng']:
-            raise ValueError("Invalid provider.")
-
-        # Acccessing variables
-        variable = req.variables
-        if variable == {}:
-            raise ValueError("Missing variables.")
-
-        # Accessing api_key from variables
-        api_key = variable['API_KEY']
-        if api_key == "":
-            raise ValueError("Missing API key.")
-
-        # Get secret key if krakenio
-        if provider == "krakenio":
-            api_secret_key = variable['SECRET_API_KEY']
-            if api_secret_key == "":
-                raise ValueError("Missing API secret key.")
-
-        # Accessing encoded image from payload
-        encoded_image = payload['image']
-        if encoded_image == "":
-            raise ValueError("Missing encoded image.")
-
-        # Decoding the encoded image
-        decoded_image = base64.b64decode(encoded_image)
-
-    except Exception as message:
-        return res.json({"success": False, "message": str(message)})
+        variables = validate_payload(req)
+    except Exception as validate_message:
+        return res.json({"success": False, "Invalid Request": str(validate_message)})
 
     # Run the api function
-    if provider.lower() == 'krakenio':
-        result = krakenio_impl(api_key, api_secret_key, decoded_image)
-    else:
-        result = tinypng_impl(api_key, decoded_image)
-
+    try:
+        if variables['provider'].lower() == 'krakenio':
+            result = krakenio_impl(variables)
+        else:
+            result = tinypng_impl(variables)
+    except RuntimeError as api_message:
+        return res.json({"success": False, "API Failed to compress image": api_message})
+        
     # Return a response in JSON
-    if result['success']:
-        optimized_image = result['optimized_image']
-        return res.json({"success:": True,
-                         "image": str(base64.b64encode(optimized_image))})
-    else:
-        return res.json({"success:": False, "image":
-                         "Image failed to compress."})
+    return res.json({
+        "success:": True,
+        "image": str(base64.b64encode(result['optimized_image']))
+    })
