@@ -52,13 +52,6 @@ def tinypng_impl(variables):
     return {"success": True, "optimized_image": result_data}
 
 
-def errorMessage(res, message):
-    return res.json({
-        "success": False,
-        "message": message,
-    })
-
-
 def validate_payload(req):
     # Accessing payload
     if req.payload == {}:
