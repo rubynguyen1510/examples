@@ -1,7 +1,7 @@
 import base64
-import requests
-import tinify
 import json
+import tinify
+import requests
 
 
 def krakenio_impl(variables):
@@ -50,13 +50,6 @@ def tinypng_impl(variables):
     tinify.key = variables['api_key']
     result_data = tinify.from_buffer(variables['decoded_image']).to_buffer()
     return {"success": True, "optimized_image": result_data}
-
-
-def errorMessage(res, message):
-    return res.json({
-        "success": False,
-        "message": message,
-    })
 
 
 def validate_payload(req):
@@ -115,3 +108,4 @@ def main(req, res):
         "success:": True,
         "image": str(base64.b64encode(result['optimized_image']))
     })
+
