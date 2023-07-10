@@ -20,7 +20,7 @@ def krakenio_impl(variables):
     params = {
         "auth": {
             "api_key": variables['api_key'],
-            "api_secret":variables['api_secret_key']
+            "api_secret": variables['api_secret_key']
         },
         "wait": True,  # Optional: Wait for the optimization to complete
         "dev": False  # Optional: Set to false to use API
@@ -102,10 +102,9 @@ def main(req, res):
             result = tinypng_impl(variables)
     except RuntimeError as api_message:
         return res.json({"success": False, "API Failed to compress image": api_message})
-        
+
     # Return a response in JSON
     return res.json({
         "success:": True,
         "image": str(base64.b64encode(result['optimized_image']))
     })
-
