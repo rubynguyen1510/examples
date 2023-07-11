@@ -35,12 +35,14 @@ def krakenio_impl(variables):
                                  data={'data': json.dumps(params)},
                                  timeout=10)
         response.raise_for_status()
-    except requests.exceptions.HTTPError as errh:
-        error = "HTTP Error" + errh.args[0]
-    except requests.exceptions.ReadTimeout as errrt:
-        error = "Time out" + str(errrt)
-    except requests.exceptions.ConnectionError as conerr:
-        error = "Connection error" + str(conerr)
+
+    except (requests.exceptions.HTTPError, requests.exceptions.ReadTimeout,
+             requests.exceptions.ConnectionError) as error:
+        raise type(error)(str(error))
+
+    except Exception as error:
+        raise Exception(str(error))
+    
     # Check status code of response
     if response.status_code == 200:
         # Request successful, parse the response
@@ -49,24 +51,18 @@ def krakenio_impl(variables):
             optimized_url = data["kraked_url"]
             optimized_image = requests.get(optimized_url, timeout=10).content
             
-    return (error, optimized_image)
+    return optimized_image
 
 
 def tinypng_impl(variables):
-    error = None
-    optimized_image = None 
     tinify.key = variables['api_key']
     try:
-        optimized_image = tinify.from_buffer(
-            variables['decoded_image']).to_buffer()
-    except tinify.errors.AccountError as account_error:
-        error = "Account Error: " + str(account_error)
-    except tinify.errors.ClientError as client_error:
-        error = "Client Error (File Empty or Corrupted): " + str(client_error)
+        optimized_image = tinify.from_buffer(variables['decoded_image']).to_buffer()
+    except (tinify.errors.AccountError, tinify.errors.ClientError) as error:
+        raise type(error)(str(error))
     except Exception as error:
-        error = "Error: " + str(error)
-    return (error, optimized_image)
-    # return {"success": True, "optimized_image": result_data}
+        raise Exception(str(error))
+    return optimized_image
 
 
 def validate_payload(req):
@@ -108,21 +104,10 @@ def validate_payload(req):
 def main(req, res):
     try:
         variables = validate_payload(req)
-    
-    except ValueError as value_error:
+    except (ValueError, KeyError) as error:
         return res.json({
             "success": False,
-            "Wrong value": str(value_error)
-        })
-    except KeyError as key_error:
-        return res.json({
-            "success": False,
-            "Accessing wrong key": str(key_error)
-        })
-    except Exception as validate_message:
-        return res.json({
-            "success": False,
-            "Invalid Request": str(validate_message)
+            str(type(error).__name__): str(error)
         })
 
     implementations = {
@@ -130,18 +115,22 @@ def main(req, res):
         "tinypng": tinypng_impl
     }
 
-    (error, optimized_image) = \
-        implementations[variables["provider"]](variables)
-
-    if (error is None and optimized_image is not None):
-        # Return a response in JSON
+    try:
+        optimized_image = implementations[variables["provider"]](variables)
+    except (requests.exceptions.HTTPError, requests.exceptions.ReadTimeout,
+            requests.exceptions.ConnectionError, tinify.errors.AccountError,
+            tinify.errors.ClientError) as error:
         return res.json({
-            "success:": True,
-            "image": str(base64.b64encode(optimized_image))
+            "success": False,
+            str(type(error).__name__): str(error)
+        })
+    except Exception as error:
+        return res.json({
+            "success": False,
+            "Error": str(error)
         })
 
-    # Return a response in JSON
     return res.json({
-        "success:": False,
-        "message": error
+        "success:": True,
+        "image": str(base64.b64encode(optimized_image))
     })
