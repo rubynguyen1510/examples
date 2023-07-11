@@ -51,14 +51,14 @@ def krakenio_impl(variables):
             optimized_url = data["kraked_url"]
             optimized_image = requests.get(optimized_url, timeout=10).content
             
-    return (error, optimized_image)
+    return (optimized_image)
 
 
 def tinypng_impl(variables):
     tinify.key = variables['api_key']
     try:
         optimized_image = tinify.from_buffer(variables['decoded_image']).to_buffer()
-    except (tinify.errors.AccountError, tinify.errors.ClientError) as error:
+    except (tinify.errors.AccountError, tinify.errors.ClientError, KeyError) as error:
         raise type(error)(str(error))
     except Exception as error:
         raise Exception(str(error))
@@ -119,7 +119,7 @@ def main(req, res):
         optimized_image = implementations[variables["provider"]](variables)
     except (requests.exceptions.HTTPError, requests.exceptions.ReadTimeout,
             requests.exceptions.ConnectionError, tinify.errors.AccountError,
-            tinify.errors.ClientError) as error:
+            tinify.errors.ClientError, KeyError) as error:
         return res.json({
             "success": False,
             str(type(error).__name__): str(error)
@@ -129,7 +129,6 @@ def main(req, res):
             "success": False,
             "Error": str(error)
         })
-
     return res.json({
         "success:": True,
         "image": str(base64.b64encode(optimized_image))
