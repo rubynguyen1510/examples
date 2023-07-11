@@ -6,21 +6,18 @@ import main
 import tinify
 # from main import tinypng_impl
 
-
 class TestMain(unittest.TestCase):
-    # def test_tinypng_small(self):
-    #     # Output validation 1KB
-    #     want = base64.b64decode( pathlib.Path(secret.RESULT_1KB_TINYPNG).read_text() )
-    #     got = main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG, "decoded_image": pathlib.Path(secret.IMAGE_1KB).read_bytes()})
-    #     self.assertIsNone(got[0])
-    #     self.assertEqual(got[1], want)
+    def test_tinypng_small(self):
+        # Output validation 1KB
+        want = base64.b64decode( pathlib.Path(secret.RESULT_1KB_TINYPNG).read_text() )
+        got = main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG, "decoded_image": pathlib.Path(secret.IMAGE_1KB).read_bytes()})
+        self.assertEqual(got, want)
 
-    # def test_tinypng_large(self):
-    #     # Output validation 1KB
-    #     want = base64.b64decode( pathlib.Path(secret.RESULT_3MB_TINYPNG).read_text() )
-    #     got = main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG, "decoded_image": pathlib.Path(secret.IMAGE_3MB).read_bytes()})
-    #     self.assertIsNone(got[0])
-    #     self.assertEqual(got[1], want)
+    def test_tinypng_large(self):
+        # Output validation 1KB
+        want = base64.b64decode( pathlib.Path(secret.RESULT_3MB_TINYPNG).read_text() )
+        got = main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG, "decoded_image": pathlib.Path(secret.IMAGE_3MB).read_bytes()})
+        self.assertEqual(got, want)
 
     def test_tinypng_credential(self):
         # Empty Credentials

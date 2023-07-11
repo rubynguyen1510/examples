@@ -35,21 +35,11 @@ def krakenio_impl(variables):
                                  data={'data': json.dumps(params)},
                                  timeout=10)
         response.raise_for_status()
-    # except requests.exceptions.HTTPError as errh:
-    #     error = "HTTP Error" + errh.args[0]
-    # except requests.exceptions.ReadTimeout as errrt:
-    #     error = "Time out" + str(errrt)
-    # except requests.exceptions.ConnectionError as conerr:
-    #     error = "Connection error" + str(conerr)
-    except requests.exceptions.HTTPError as http_error:
-        raise requests.exceptions.HTTPError(str(http_error))
-    
-    except requests.exceptions.ReadTimeout as timeout_error:
-        raise requests.exceptions.ReadTimeout(str(timeout_error))
-    
-    except requests.exceptions.ConnectionError as connection_error:
-        raise requests.exceptions.ConnectionError(str(connection_error))
-    
+
+    except (requests.exceptions.HTTPError, requests.exceptions.ReadTimeout,
+             requests.exceptions.ConnectionError) as error:
+        raise type(error)(str(error))
+
     except Exception as error:
         raise Exception(str(error))
     
@@ -65,20 +55,14 @@ def krakenio_impl(variables):
 
 
 def tinypng_impl(variables):
-    optimized_image = None
     tinify.key = variables['api_key']
     try:
-        optimized_image = tinify.from_buffer(
-            variables['decoded_image']).to_buffer()
-    except tinify.errors.AccountError as account_error:
-        raise tinify.errors.AccountError(str(account_error))
-    
-    except tinify.errors.ClientError as client_error:
-        raise tinify.errors.ClientError(str(client_error))
-    
+        optimized_image = tinify.from_buffer(variables['decoded_image']).to_buffer()
+    except (tinify.errors.AccountError, tinify.errors.ClientError) as error:
+        raise type(error)(str(error))
     except Exception as error:
         raise Exception(str(error))
-    return (optimized_image)
+    return optimized_image
 
 
 def validate_payload(req):
@@ -120,21 +104,10 @@ def validate_payload(req):
 def main(req, res):
     try:
         variables = validate_payload(req)
-    
-    except ValueError as value_error:
+    except (ValueError, KeyError) as error:
         return res.json({
             "success": False,
-            "Wrong value": str(value_error)
-        })
-    except KeyError as key_error:
-        return res.json({
-            "success": False,
-            "Accessing wrong key": str(key_error)
-        })
-    except Exception as validate_message:
-        return res.json({
-            "success": False,
-            "Invalid Request": str(validate_message)
+            str(type(error).__name__): str(error)
         })
 
     implementations = {
@@ -143,37 +116,20 @@ def main(req, res):
     }
 
     try:
-        (optimized_image) = implementations[variables["provider"]](variables)
-    except requests.exceptions.HTTPError as http_error:
+        optimized_image = implementations[variables["provider"]](variables)
+    except (requests.exceptions.HTTPError, requests.exceptions.ReadTimeout,
+            requests.exceptions.ConnectionError, tinify.errors.AccountError,
+            tinify.errors.ClientError) as error:
         return res.json({
             "success": False,
-            "HTTP Error": str(http_error)
-        })    
-    except requests.exceptions.ReadTimeout as timeout_error:
-        return res.json({
-            "success": False,
-            "Timeout Error": str(timeout_error)
-        })    
-    except requests.exceptions.ConnectionError as connection_error:
-        return res.json({
-            "success": False,
-            "Connection Error": str(connection_error)
-        })    
-    except tinify.errors.AccountError as acc_error:
-        return res.json({
-            "success": False,
-            "Account Error": str(acc_error)
-        })
-    except tinify.errors.ClientError as client_error:
-        return res.json({
-            "success": False,
-            "Client Error": str(client_error)
+            str(type(error).__name__): str(error)
         })
     except Exception as error:
         return res.json({
             "success": False,
             "Error": str(error)
         })
+
     return res.json({
         "success:": True,
         "image": str(base64.b64encode(optimized_image))
