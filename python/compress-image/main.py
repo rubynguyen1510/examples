@@ -53,7 +53,7 @@ def krakenio_impl(variables):
 
 def tinypng_impl(variables):
     error = None
-    optimized_image = None
+    optimized_image = None 
     tinify.key = variables['api_key']
     try:
         optimized_image = tinify.from_buffer(
@@ -64,7 +64,6 @@ def tinypng_impl(variables):
         error = "Client Error (File Empty or Corrupted): " + str(client_error)
     except Exception as error:
         error = "Error: " + str(error)
-
     return (error, optimized_image)
     # return {"success": True, "optimized_image": result_data}
 
