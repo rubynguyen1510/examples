@@ -9,17 +9,17 @@ from unittest import mock
 # from main import tinypng_impl
 
 class TestMain(unittest.TestCase):
-    # def test_tinypng_small(self):
-    #     # Output validation 1KB
-    #     want = base64.b64decode( pathlib.Path(secret.RESULT_1KB_TINYPNG).read_text() )
-    #     got = main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG, "decoded_image": pathlib.Path(secret.IMAGE_1KB).read_bytes()})
-    #     self.assertEqual(got, want)
+    def test_tinypng_small(self):
+        # Output validation 1KB
+        want = base64.b64decode( pathlib.Path(secret.RESULT_1KB_TINYPNG).read_text() )
+        got = main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG, "decoded_image": pathlib.Path(secret.IMAGE_1KB).read_bytes()})
+        self.assertEqual(got, want)
 
-    # def test_tinypng_large(self):
-    #     # Output validation 1KB
-    #     want = base64.b64decode( pathlib.Path(secret.RESULT_3MB_TINYPNG).read_text() )
-    #     got = main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG, "decoded_image": pathlib.Path(secret.IMAGE_3MB).read_bytes()})
-    #     self.assertEqual(got, want)
+    def test_tinypng_large(self):
+        # Output validation 1KB
+        want = base64.b64decode( pathlib.Path(secret.RESULT_3MB_TINYPNG).read_text() )
+        got = main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG, "decoded_image": pathlib.Path(secret.IMAGE_3MB).read_bytes()})
+        self.assertEqual(got, want)
 
     def test_tinypng_credential(self):
         # Empty Credentials
@@ -66,11 +66,19 @@ class TestMain(unittest.TestCase):
             # Assert that the mocked methods were called
             mock_from_buffer.assert_called_once_with(pathlib.Path(secret.IMAGE_1KB).read_bytes())
             mock_from_buffer.return_value.to_buffer.assert_called_once()
-        
-    # def test_krakenio_small(self):
-    #     want = base64.b64decode( pathlib.Path(secret.RESULT_1KB_KRAKENIO).read_text() )
-    #     got = main.krakenio_impl({"api_key": secret.API_KEY_KRAKENIO, "api_secret_key": secret.SECRET_API_KEY_KRAKENIO, "decoded_image": pathlib.Path(secret.IMAGE_1KB).read_bytes()})
-    #     self.assertEqual(got, want)
+
+    @mock.patch('main.tinify.from_buffer')
+    def test_tinypng_impl_unexpected_exception(self, mock_from_buffer):
+        with mock.patch("tinify.from_buffer") as mock_from_buffer:
+            mock_from_buffer.side_effect = tinify.errors.AccountError("API Key is wrong")
+
+            #Check assert raise 
+            self.assertRaises(tinify.errors.AccountError, main.tinypng_impl, {"api_key": secret.API_KEY_TINYPNG, "decoded_image": pathlib.Path(secret.IMAGE_1KB).read_bytes()})
+            
+            #Check contents of raise error
+            with self.assertRaises(tinify.errors.AccountError) as cm:
+                main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG, "decoded_image": pathlib.Path(secret.IMAGE_1KB).read_bytes()})
+            self.assertEqual(str(cm.exception), "Unexpected error")
 
 if __name__ == '__main__':
     unittest.main()
