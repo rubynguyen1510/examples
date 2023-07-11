@@ -3,6 +3,7 @@ import base64
 import pathlib
 import secret
 import main
+import secret
 # from main import tinypng_impl
 
 
