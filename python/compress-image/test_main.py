@@ -1,6 +1,7 @@
 import unittest
 import base64
 import main
+import secret
 # from main import tinypng_impl
 
 
@@ -12,10 +13,9 @@ class TestMain(unittest.TestCase):
         # self.result_data = b"YOUR_RESULT_DATA"
 
         # Gathering variables for 1kb image
-        self.api_key_tinypng = "R4nM3B54NbHNcHblC0XXl0LZyV82PBgZ"
-        self.api_key_krakenio = "f66cec6f44df73d3ba48d8dbce302738"
-        self.secret_api_key_krakenio = "7bbd29dd53c00a068b7ebe20b074540a0d7cea9d"
-
+        self.api_key_tinypng = secret.API_KEY_TINYPNG
+        self.api_key_krakenio = secret.API_KEY_KRAKENIO
+        self.secret_api_key_krakenio = secret.SECRET_API_KEY_KRAKENIO
 
         # Result data for 0b
         self.result_data_empty = b""

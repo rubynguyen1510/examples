@@ -14,7 +14,8 @@ def krakenio_impl(variables):
     # Headers for post request
     headers = {
         'User-Agent':
-        'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.85 Safari/537.36'
+        'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 \
+        (KHTML, like Gecko) Chrome/40.0.2214.85 Safari/537.36'
     }
     # File that we will pass in
     files = {'file': variables['decoded_image']}
@@ -47,7 +48,7 @@ def krakenio_impl(variables):
         if data["success"] is True:
             optimized_url = data["kraked_url"]
             optimized_image = requests.get(optimized_url, timeout=10).content
-    
+            
     return (error, optimized_image)
 
 
