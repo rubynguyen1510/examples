@@ -45,23 +45,30 @@ class TestMain(unittest.TestCase):
         self.result_data_3mb_krakenio = base64.b64decode(encoded_result_3mb_krakenio.read())
 
         self.variables_tinypng = [{
-                #1 kb image
+                
+                
+                #   1 kb image
                 "api_key": self.api_key_tinypng,
                 "decoded_image": self.decoded_image_1kb,
             },
 
             {   
-                #3kb image
+                
+                # 3kb image
                 "api_key": self.api_key_tinypng,
                 "decoded_image": self.decoded_image_3mb,
             },
 
-            { #Wrong api key
+            { 
+                
+                # Wrong api key
                 "api_key": "R4nM3B54NbHNcHblC0XXl0LZyVBgZ",
                 "decoded_image": self.decoded_image_1kb,
             },
 
-            { #If a person submits empty image
+            { 
+                
+                # If a person submits empty image
                 "api_key": self.api_key_tinypng,
                 "decoded_image": b"",
             }
@@ -95,22 +102,30 @@ class TestMain(unittest.TestCase):
         ]
         return None
 
-    def test_tinypng(self):
+    def test_tinypng_small(self):
         # Output validation 1KB
         result = main.tinypng_impl(self.variables_tinypng[0])
         self.assertTrue(result["success"])
         self.assertEqual(result["optimized_image"], self.result_data_1kb_tinypng)
 
+    def test_tinypng_large(self):
         # Output validation 3MB
         result = main.tinypng_impl(self.variables_tinypng[1])
         self.assertTrue(result["success"])
         self.assertEqual(result["optimized_image"], self.result_data_3mb_tinypng)
 
+    def test_tinypng_credential(self):
         # If user inputs wrong credentials
         result = main.tinypng_impl(self.variables_tinypng[2])
-        print(result)
         self.assertFalse(result["success"])
-        self.assertEqual(result["message"], "Invalid_API_KEY")
+        self.assertEqual(result["message"], "Invalid API Key.")
+
+    def test_tinypng_empty(self):
+        # If user input is empty
+        result = main.tinypng_impl(self.variables_tinypng[3])
+        self.assertFalse(result["success"])
+        self.assertEqual(result["message"], "Input file is empty.")
+
 
     def test_krakenio(self):
         # Output validation 1KB
