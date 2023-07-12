@@ -7,8 +7,7 @@ import tinify
 import requests
 from unittest.mock import MagicMock, patch
 import requests.exceptions
-
-# from main import tinypng_impl
+import json
 
 
 class TestMain(unittest.TestCase):
@@ -147,5 +146,49 @@ class TestMain(unittest.TestCase):
                 main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG, "decoded_image": pathlib.Path(secret.IMAGE_1KB).read_bytes()})
             self.assertEqual(str(cm.exception), "API Key is wrong")
 
+    def test_main(self):
+        # Output validation 1KB
+        want = {
+            "success:": True,
+            "image": pathlib.Path(secret.RESULT_1KB_TINYPNG).read_text() 
+        }
+
+        req = MockRequest({
+            "payload": {
+                "provider": "tinypng",
+                "image": str(base64.b64encode(pathlib.Path(secret.IMAGE_1KB).read_bytes()), 'utf-8')
+            },
+            "variables": {
+                "API_KEY": secret.API_KEY_TINYPNG
+            }
+        })
+
+        res = MockResponse()  # Create a mock response object
+        main.main(req, res)
+        
+        # Check the response
+        got = res.json()
+        self.maxDiff = None
+        self.assertEqual(got, want)
+
+# Define a mock request class
+class MockRequest:
+    def __init__(self, data):
+        self.payload = data.get("payload", {})
+        self.variables = data.get("variables", {})
+
+# Define a mock response class
+class MockResponse:
+    def __init__(self):
+        self._json = None
+
+    def json(self):
+        return self._json
+
+    def json(self, data=None):
+        if data is not None:
+            self._json = data
+        return self._json
+    
 if __name__ == '__main__':
     unittest.main()
