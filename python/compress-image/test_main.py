@@ -1,60 +1,168 @@
 import unittest
 import base64
 import pathlib
+from unittest.mock import patch
 import secret
 import main
 import tinify
 import requests
-from unittest.mock import MagicMock, patch
 import requests.exceptions
-import json
 
 
-class TestMain(unittest.TestCase):
+class TestTinypng(unittest.TestCase):
+    def test_tinypng_small(self):
+        want = (pathlib.Path(secret.RESULT_1KB_TINYPNG).
+                read_text(encoding="utf-8"))
+        got = main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG,
+                                 "decoded_image": pathlib.Path(secret.IMAGE_1KB).read_bytes()})
+        self.assertEqual(got, want)
 
+    def test_tinypng_big(self):
+        want = (pathlib.Path(secret.RESULT_3MB_TINYPNG).
+                read_text(encoding="utf-8"))
+        got = main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG,
+                                 "decoded_image": pathlib.Path(secret.IMAGE_3MB).read_bytes()})
+        self.assertEqual(got, want)
+
+    def test_tinypng_credential(self):
+        # Empty Credentials
+        self.assertRaises(tinify.errors.AccountError, main.tinypng_impl,
+                          {"api_key": "",
+                           "decoded_image": pathlib.Path(secret.IMAGE_1KB).
+                           read_bytes()})
+        # # Incorrect Credentials
+        self.assertRaises(tinify.errors.AccountError, main.tinypng_impl,
+                          {"api_key": "1NCORRECT4CREDENT1ALS",
+                           "decoded_image": pathlib.Path(secret.IMAGE_1KB).
+                           read_bytes()})
+
+    def test_tinypng_image(self):
+        # Image is Empty
+        self.assertRaises(tinify.errors.ClientError, main.tinypng_impl,
+                          {"api_key": secret.API_KEY_TINYPNG,
+                           "decoded_image": b''})
+        # Corrupted Image
+        self.assertRaises(tinify.errors.ClientError, main.tinypng_impl,
+                          {"api_key": secret.API_KEY_TINYPNG,
+                           "decoded_image": b'ORw0KGgoAAAANSUhEUgAAABEAAAAOCAMAAAD+M'} )
+
+    def test_tinypng_keys(self):
+        # Accessing wrong key
+        self.assertRaises(KeyError, main.tinypng_impl,
+                          {"a": secret.API_KEY_TINYPNG,
+                           "decoded_image": pathlib.Path(secret.IMAGE_1KB).
+                           read_bytes()})
+        self.assertRaises(KeyError, main.tinypng_impl,
+                          {"api_key": secret.API_KEY_TINYPNG,
+                           "code_image": pathlib.Path(secret.IMAGE_1KB).
+                           read_bytes()})
+
+        # Empty Key
+        self.assertRaises(KeyError, main.tinypng_impl,
+                          {"": secret.API_KEY_TINYPNG,
+                           "code_image": pathlib.Path(secret.IMAGE_1KB).
+                           read_bytes()})
+        self.assertRaises(KeyError, main.tinypng_impl,
+                          {"api_key": secret.API_KEY_TINYPNG,
+                           "": pathlib.Path(secret.IMAGE_1KB).read_bytes()})
+
+    def test_tinypng_variables(self):
+        # Empty variables
+        self.assertRaises(KeyError, main.tinypng_impl, {})
+        # Missing decoded_image variable
+        self.assertRaises(KeyError, main.tinypng_impl,
+                          {"api_key": secret.API_KEY_TINYPNG})
+        # Missing api_key variable
+        self.assertRaises(KeyError, main.tinypng_impl,
+                          {"decoded_image": b"123"})
+        
+    def test_tinypng_impl_basic_functionality_3MB(self):
+        with patch("main.tinify.from_buffer") as mock_from_buffer:
+            # Strip the string. In our testcase we have b'Encoded Information' so we would need to clean it.
+            stripped_string = (pathlib.Path(secret.RESULT_3MB_TINYPNG).read_text(encoding="utf-8"))[2:-1]
+            # Set up the mock return value. To mock the return value we would give it the decoded result
+            mock_from_buffer.return_value.to_buffer.return_value = (base64.b64decode(stripped_string))
+            # Assert the expected result
+            optimized_image = main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG, "decoded_image": pathlib.Path(secret.IMAGE_3MB).read_bytes()})
+            # Check if the return type is a string
+            self.assertIsInstance(optimized_image, str)
+            # Check if the assert equals and is correct
+            self.assertEqual(optimized_image, str(base64.b64encode(mock_from_buffer.return_value.to_buffer.return_value)))
+
+    def test_tinypng_impl_basic_functionality_1kb(self):
+        with patch("main.tinify.from_buffer") as mock_from_buffer:
+            # Strip the string. In our testcase we have b'Encoded Information' so we would need to clean it.
+            stripped_string = (pathlib.Path(secret.RESULT_1KB_TINYPNG).read_text(encoding="utf-8"))[2:-1]
+            # Set up the mock return value. To mock the return value we would give it the decoded result
+            mock_from_buffer.return_value.to_buffer.return_value = (base64.b64decode(stripped_string))
+            # Assert the expected result
+            optimized_image = main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG, "decoded_image": pathlib.Path(secret.IMAGE_1KB).read_bytes()})
+            # Check if the return type is a string
+            self.assertIsInstance(optimized_image, str)
+            # Check if the assert equals and is correct
+            self.assertEqual(optimized_image, str(base64.b64encode(mock_from_buffer.return_value.to_buffer.return_value)))
+
+    def test_tinypng_impl_unexpected_exception_accountError(self):
+        with patch("main.tinify.from_buffer") as mock_from_buffer:
+            mock_from_buffer.side_effect = tinify.errors.AccountError("API Key is wrong")
+            self.assertRaises(tinify.errors.AccountError,
+                              main.tinypng_impl,
+                              {"api_key": secret.API_KEY_TINYPNG,
+                               "decoded_image": pathlib.Path(secret.IMAGE_1KB).
+                               read_bytes()})
+            mock_from_buffer.assert_called_once()
+
+    def test_tinypng_impl_unexpected_exception_clientError(self):
+        with patch("main.tinify.from_buffer") as mock_from_buffer:
+            mock_from_buffer.side_effect = tinify.errors.ClientError("Image is incorrect")
+            self.assertRaises(tinify.errors.ClientError,
+                              main.tinypng_impl,
+                              {"api_key": secret.API_KEY_TINYPNG,
+                               "decoded_image": pathlib.Path(secret.IMAGE_1KB).
+                               read_bytes()})
+            mock_from_buffer.assert_called_once()
+
+
+class TestKrakenIO(unittest.TestCase):
     def test_krakenio_small(self):
         # Output validation 1KB
-        want = base64.b64decode(pathlib.Path(
-            secret.RESULT_1KB_KRAKENIO).read_text())
-        got = main.krakenio_impl({"api_key": secret.API_KEY_KRAKENIO, 
-                                  "api_secret_key": 
-                                  secret.SECRET_API_KEY_KRAKENIO, 
-                                  "decoded_image": pathlib.Path(
-                                    secret.IMAGE_1KB).read_bytes()})
+        want = (pathlib.Path(secret.RESULT_1KB_KRAKENIO).read_text(encoding="utf-8"))
+        got = main.krakenio_impl({"api_key": secret.API_KEY_KRAKENIO,
+                                  "api_secret_key":
+                                  secret.SECRET_API_KEY_KRAKENIO,
+                                  "decoded_image": pathlib.Path(secret.IMAGE_1KB).
+                                  read_bytes()})
         self.assertEqual(got, want)
 
     def test_krakenio_big(self):
         # Output validation 3MB
-        want = base64.b64decode(pathlib.Path(
-            secret.RESULT_3MB_KRAKENIO).read_text())
+        want = (pathlib.Path(secret.RESULT_3MB_KRAKENIO).read_text(encoding="utf-8"))
         got = main.krakenio_impl({"api_key": secret.API_KEY_KRAKENIO,
                                   "api_secret_key":
                                   secret.SECRET_API_KEY_KRAKENIO,
-                                  "decoded_image": pathlib.Path(
-                                    secret.IMAGE_3MB).read_bytes()})
+                                  "decoded_image": pathlib.Path(secret.IMAGE_3MB).
+                                  read_bytes()})
         self.assertEqual(got, want)
 
     def test_krakenio_wrong_api_key(self):
         self.assertRaises(requests.exceptions.HTTPError, main.krakenio_impl, 
                           {"api_key": secret.API_KEY_KRAKENIO,
-                            "api_secret_key": "1234",
-                            "decoded_image": pathlib.Path(
-                            secret.IMAGE_1KB).read_bytes()})
+                           "api_secret_key": "1234",
+                           "decoded_image": pathlib.Path(secret.IMAGE_1KB).
+                           read_bytes()})
         
     def test_krakenio_wrong_api_secret_key(self):
         self.assertRaises(requests.exceptions.HTTPError, main.krakenio_impl, 
                           {"api_key": "1234",
-                            "api_secret_key": 
-                            secret.SECRET_API_KEY_KRAKENIO,
-                            "decoded_image": pathlib.Path(
-                            secret.IMAGE_1KB).read_bytes()})
+                           "api_secret_key": secret.SECRET_API_KEY_KRAKENIO,
+                           "decoded_image": pathlib.Path(secret.IMAGE_1KB).
+                           read_bytes()})
 
     def test_krakenio_corrupted_image(self):
         self.assertRaises(requests.exceptions.HTTPError, main.krakenio_impl, 
                           {"api_key": secret.API_KEY_KRAKENIO,
-                            "api_secret_key": 
-                            secret.SECRET_API_KEY_KRAKENIO,
-                            "decoded_image": "123"})
+                           "api_secret_key": secret.SECRET_API_KEY_KRAKENIO,
+                           "decoded_image": "123"})
     
     def test_krakenio_time_out(self):
         with patch("main.requests.post") as mock_post:
@@ -78,74 +186,111 @@ class TestMain(unittest.TestCase):
                 })
             mock_post.assert_called_once()
 
-    def test_tinypng_small(self):
-        want = base64.b64decode(pathlib.Path(secret.RESULT_1KB_TINYPNG).read_text())
-        got = main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG, "decoded_image": pathlib.Path(secret.IMAGE_1KB).read_bytes()})
-        self.assertEqual(got, want)
 
-    def test_tinypng_big(self):
-        want = base64.b64decode(pathlib.Path(secret.RESULT_3MB_TINYPNG).read_text())
-        got = main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG, "decoded_image": pathlib.Path(secret.IMAGE_3MB).read_bytes()})
-        self.assertEqual(got, want)
+class TestValidatePayload(unittest.TestCase):
+    def test_validate_payload(self):
+        test_cases = [
+            {
+                "payload": {"provider": "tinypng", "image": str(base64.b64encode(pathlib.Path(secret.IMAGE_1KB).read_bytes()), 'utf-8')},
+                "variables": {"API_KEY": secret.API_KEY_TINYPNG},
+                "expected_result": {'provider': 'tinypng', 'api_key': secret.API_KEY_TINYPNG, 'decoded_image': pathlib.Path(secret.IMAGE_1KB).read_bytes()}
+            },
+            {
+                "payload": {"provider": "krakenio", "image": str(base64.b64encode(pathlib.Path(secret.IMAGE_1KB).read_bytes()), 'utf-8')},
+                "variables": {"API_KEY": secret.API_KEY_KRAKENIO, "SECRET_API_KEY": secret.SECRET_API_KEY_KRAKENIO},
+                "expected_result": {'provider': 'krakenio', 'api_key': secret.API_KEY_KRAKENIO, "api_secret_key": secret.SECRET_API_KEY_KRAKENIO, 'decoded_image': pathlib.Path(secret.IMAGE_1KB).read_bytes()}
+            }
+        ]
 
-    def test_tinypng_credential(self):
-        # Empty Credentials
-        self.assertRaises(tinify.errors.AccountError, main.tinypng_impl, {"api_key": "", "decoded_image": pathlib.Path(secret.IMAGE_1KB).read_bytes()} )
-        # # Incorrect Credentials
-        self.assertRaises(tinify.errors.AccountError, main.tinypng_impl, {"api_key": "1NCORRECT4CREDENT1ALS", "decoded_image": pathlib.Path(secret.IMAGE_1KB).read_bytes()} )
+        for test_case in test_cases:
+            req = MockRequest({
+                "payload": test_case["payload"],
+                "variables": test_case["variables"]
+                })
+            got = main.validate_payload(req)
+            self.assertEqual(got, test_case["expected_result"])
 
-    def test_tinypng_image(self):
-        # Image is Empty
-        self.assertRaises(tinify.errors.ClientError, main.tinypng_impl, {"api_key": secret.API_KEY_TINYPNG, "decoded_image": b''} )
-        # Corrupted Image
-        self.assertRaises(tinify.errors.ClientError, main.tinypng_impl, {"api_key": secret.API_KEY_TINYPNG, "decoded_image": b'ORw0KGgoAAAANSUhEUgAAABEAAAAOCAMAAAD+M'} )
+    def test_validate_payload_ValueError(self):
+        test_cases = [
+            # Empty payload
+            {
+                "payload": {},
+                "variables": {},
+                "expected_error": "Missing payload"
+            },
+            # Invalid Provider and Image is Empty
+            {
+                "payload": {"provider": "IMNOTAPROVIDER", "image": ""},
+                "variables": {"API_KEY": "1234567"},
+                "expected_error": "Invalid provider."
+            },
+            # Missing variables
+            {
+                "payload": {"provider": "krakenio", "image": ""},
+                "variables": {},
+                "expected_error": "Missing variables."
+            },
+            {
+                # Missing api key tiny
+                "payload": {"provider": "tinypng", "image": "12345"},
+                "variables": {"API_KEY": ""},
+                "expected_error": "Missing API key."
+            },
+            {
+                # Missing api key
+                "payload": {"provider": "krakenio", "image": "12345"},
+                "variables": {"API_KEY": "", "SECRET_API_KEY": ""},
+                "expected_error": "Missing API key."
+            },
+            {
+                # Missing secret api key
+                "payload": {"provider": "krakenio", "image": "12345"},
+                "variables": {"API_KEY": "123", "SECRET_API_KEY": ""},
+                "expected_error": "Missing api secret key."
+            },
+        ]
 
-    def test_tinypng_keys(self):
-        # Accessing wrong key
-        self.assertRaises(KeyError, main.tinypng_impl, {"a": secret.API_KEY_TINYPNG, "decoded_image": pathlib.Path(secret.IMAGE_1KB).read_bytes()})
-        self.assertRaises(KeyError, main.tinypng_impl, {"api_key": secret.API_KEY_TINYPNG, "code_image": pathlib.Path(secret.IMAGE_1KB).read_bytes()})
+        for test_case in test_cases:
+            req = MockRequest({
+                "payload": test_case["payload"],
+                "variables": test_case["variables"]
+                })
+            with self.assertRaises(ValueError) as context:
+                main.validate_payload(req)
+                self.assertEqual(str(context.exception), test_case["expected_error"])
 
-        # Empty Key
-        self.assertRaises(KeyError, main.tinypng_impl, {"": secret.API_KEY_TINYPNG, "code_image": pathlib.Path(secret.IMAGE_1KB).read_bytes()})
-        self.assertRaises(KeyError, main.tinypng_impl, {"api_key": secret.API_KEY_TINYPNG, "": pathlib.Path(secret.IMAGE_1KB).read_bytes()})
-        self.assertRaises(KeyError, main.tinypng_impl, {"": secret.API_KEY_TINYPNG, "": pathlib.Path(secret.IMAGE_1KB).read_bytes()})
+    def test_validate_payload_KeyError(self):
+        test_cases = [
+            {
+                # accessing wrong provider
+                "payload": {"WRONG_PROVIDER": "krakenio", "image": "12345"},
+                "variables": {"API_KEY": "123", "SECRET_API_KEY": ""},
+            },
+            {
+                # accessing wrong image
+                "payload": {"provider": "krakenio", "1Mage": "12345"},
+                "variables": {"API_KEY": "123", "SECRET_API_KEY": ""},
+            },
+            {
+                # accessing wrong api key
+                "payload": {"provider": "krakenio", "1Mage": "12345"},
+                "variables": {"NOT AN API": "123", "SECRET_API_KEY": ""},
+            },
+            {
+                # accessing wrong api keys and secret keys
+                "payload": {"provider": "krakenio", "1Mage": "12345"},
+                "variables": {"API": "123", "SecretKey": ""},
+            },
+        ]
+        for test_case in test_cases:
+            req = MockRequest({
+                "payload": test_case["payload"],
+                "variables": test_case["variables"]
+                })
+            self.assertRaises(KeyError, main.validate_payload, req)
 
-    def test_tinypng_variables(self):
-        self.assertRaises(KeyError, main.tinypng_impl, {})
-        self.assertRaises(KeyError, main.tinypng_impl, {"api_key": "your_api_key"}) #Missing decoded_image variable
 
-    def test_tinypng_return_type(self):
-        with patch("main.tinify.from_buffer") as mock_from_buffer:
-            mock_from_buffer.return_value.to_buffer.return_value = b''
-            got = main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG, "decoded_image": b''})
-            self.assertIsInstance(got, bytes)
-
-            mock_from_buffer.return_value.to_buffer.return_value = base64.b64decode( pathlib.Path(secret.RESULT_3MB_TINYPNG).read_text() )
-            optimized_image = main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG, "decoded_image": pathlib.Path(secret.IMAGE_3MB).read_bytes()})
-            self.assertIsInstance(optimized_image, bytes)
-
-    def test_tinypng_impl_basic_functionality(self):
-        with patch("main.tinify.from_buffer") as mock_from_buffer:
-            # Set up the mock return value
-            mock_from_buffer.return_value.to_buffer.return_value = pathlib.Path(secret.RESULT_1KB_TINYPNG).read_text()
-            # Assert the expected result
-            self.assertEqual(main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG, "decoded_image": pathlib.Path(secret.IMAGE_1KB).read_bytes()}), pathlib.Path(secret.RESULT_1KB_TINYPNG).read_text())
-            # Assert that the mocked methods were called
-            mock_from_buffer.assert_called_once_with(pathlib.Path(secret.IMAGE_1KB).read_bytes())
-            mock_from_buffer.return_value.to_buffer.assert_called_once()
-
-    def test_tinypng_impl_unexpected_exception(self):
-        with patch("main.tinify.from_buffer") as mock_from_buffer:
-            mock_from_buffer.side_effect = tinify.errors.AccountError("API Key is wrong")
-
-            #Check assert raise 
-            self.assertRaises(tinify.errors.AccountError, main.tinypng_impl, {"api_key": secret.API_KEY_TINYPNG, "decoded_image": pathlib.Path(secret.IMAGE_1KB).read_bytes()})
-            
-            #Check contents of raise error
-            with self.assertRaises(tinify.errors.AccountError) as cm:
-                main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG, "decoded_image": pathlib.Path(secret.IMAGE_1KB).read_bytes()})
-            self.assertEqual(str(cm.exception), "API Key is wrong")
-
+class TestMain(unittest.TestCase):
     def test_main(self):
         # Output validation 1KB
         want = {
@@ -171,11 +316,13 @@ class TestMain(unittest.TestCase):
         self.maxDiff = None
         self.assertEqual(got, want)
 
+
 # Define a mock request class
 class MockRequest:
     def __init__(self, data):
         self.payload = data.get("payload", {})
         self.variables = data.get("variables", {})
+
 
 # Define a mock response class
 class MockResponse:
@@ -189,6 +336,7 @@ class MockResponse:
         if data is not None:
             self._json = data
         return self._json
-    
+
+
 if __name__ == '__main__':
     unittest.main()
