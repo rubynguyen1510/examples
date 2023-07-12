@@ -79,6 +79,16 @@ class TestMain(unittest.TestCase):
                 })
             mock_post.assert_called_once()
 
+    def test_tinypng_small(self):
+        want = base64.b64decode(pathlib.Path(secret.RESULT_1KB_TINYPNG).read_text())
+        got = main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG, "decoded_image": pathlib.Path(secret.IMAGE_1KB).read_bytes()})
+        self.assertEqual(got, want)
+
+    def test_tinypng_big(self):
+        want = base64.b64decode(pathlib.Path(secret.RESULT_3MB_TINYPNG).read_text())
+        got = main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG, "decoded_image": pathlib.Path(secret.IMAGE_3MB).read_bytes()})
+        self.assertEqual(got, want)
+
     def test_tinypng_credential(self):
         # Empty Credentials
         self.assertRaises(tinify.errors.AccountError, main.tinypng_impl, {"api_key": "", "decoded_image": pathlib.Path(secret.IMAGE_1KB).read_bytes()} )
