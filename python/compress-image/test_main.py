@@ -13,7 +13,6 @@ import requests.exceptions
 
 class TestMain(unittest.TestCase):
 
-
     def test_krakenio_small(self):
         # Output validation 1KB
         want = base64.b64decode(pathlib.Path(
@@ -24,7 +23,6 @@ class TestMain(unittest.TestCase):
                                   "decoded_image": pathlib.Path(
                                     secret.IMAGE_1KB).read_bytes()})
         self.assertEqual(got, want)
-
 
     def test_krakenio_big(self):
         # Output validation 3MB
@@ -37,7 +35,6 @@ class TestMain(unittest.TestCase):
                                     secret.IMAGE_3MB).read_bytes()})
         self.assertEqual(got, want)
 
-
     def test_krakenio_wrong_api_key(self):
         self.assertRaises(requests.exceptions.HTTPError, main.krakenio_impl, 
                           {"api_key": secret.API_KEY_KRAKENIO,
@@ -45,7 +42,6 @@ class TestMain(unittest.TestCase):
                             "decoded_image": pathlib.Path(
                             secret.IMAGE_1KB).read_bytes()})
         
-
     def test_krakenio_wrong_api_secret_key(self):
         self.assertRaises(requests.exceptions.HTTPError, main.krakenio_impl, 
                           {"api_key": "1234",
@@ -54,7 +50,6 @@ class TestMain(unittest.TestCase):
                             "decoded_image": pathlib.Path(
                             secret.IMAGE_1KB).read_bytes()})
 
-
     def test_krakenio_corrupted_image(self):
         self.assertRaises(requests.exceptions.HTTPError, main.krakenio_impl, 
                           {"api_key": secret.API_KEY_KRAKENIO,
@@ -62,7 +57,6 @@ class TestMain(unittest.TestCase):
                             secret.SECRET_API_KEY_KRAKENIO,
                             "decoded_image": "123"})
     
-
     def test_krakenio_time_out(self):
         with patch("main.requests.post") as mock_post:
             mock_post.side_effect = requests.exceptions.ReadTimeout
@@ -74,7 +68,6 @@ class TestMain(unittest.TestCase):
                 })
             mock_post.assert_called_once()
     
-
     def test_krakenio_connection_error(self):
         with patch("main.requests.post") as mock_post:
             mock_post.side_effect = requests.exceptions.ConnectionError
@@ -85,7 +78,6 @@ class TestMain(unittest.TestCase):
                     "decoded_image": pathlib.Path(secret.IMAGE_1KB).read_bytes()
                 })
             mock_post.assert_called_once()
-
 
     def test_tinypng_credential(self):
         # Empty Credentials
@@ -113,18 +105,18 @@ class TestMain(unittest.TestCase):
         self.assertRaises(KeyError, main.tinypng_impl, {})
         self.assertRaises(KeyError, main.tinypng_impl, {"api_key": "your_api_key"}) #Missing decoded_image variable
 
-    @mock.patch('main.tinify.from_buffer')
-    def test_tinypng_return_type(self, mock_from_buffer):
-        mock_from_buffer.return_value.to_buffer.return_value = b''
-        got = main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG, "decoded_image": b''})
-        self.assertIsInstance(got, bytes)
+    def test_tinypng_return_type(self):
+        with patch("main.tinify.from_buffer") as mock_from_buffer:
+            mock_from_buffer.return_value.to_buffer.return_value = b''
+            got = main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG, "decoded_image": b''})
+            self.assertIsInstance(got, bytes)
 
-        mock_from_buffer.return_value.to_buffer.return_value = base64.b64decode( pathlib.Path(secret.RESULT_3MB_TINYPNG).read_text() )
-        optimized_image = main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG, "decoded_image": pathlib.Path(secret.IMAGE_3MB).read_bytes()})
-        self.assertIsInstance(optimized_image, bytes)
+            mock_from_buffer.return_value.to_buffer.return_value = base64.b64decode( pathlib.Path(secret.RESULT_3MB_TINYPNG).read_text() )
+            optimized_image = main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG, "decoded_image": pathlib.Path(secret.IMAGE_3MB).read_bytes()})
+            self.assertIsInstance(optimized_image, bytes)
 
     def test_tinypng_impl_basic_functionality(self):
-        with mock.patch("tinify.from_buffer") as mock_from_buffer:
+        with patch("main.tinify.from_buffer") as mock_from_buffer:
             # Set up the mock return value
             mock_from_buffer.return_value.to_buffer.return_value = pathlib.Path(secret.RESULT_1KB_TINYPNG).read_text()
             # Assert the expected result
@@ -133,9 +125,8 @@ class TestMain(unittest.TestCase):
             mock_from_buffer.assert_called_once_with(pathlib.Path(secret.IMAGE_1KB).read_bytes())
             mock_from_buffer.return_value.to_buffer.assert_called_once()
 
-    @mock.patch('main.tinify.from_buffer')
-    def test_tinypng_impl_unexpected_exception(self, mock_from_buffer):
-        with mock.patch("tinify.from_buffer") as mock_from_buffer:
+    def test_tinypng_impl_unexpected_exception(self):
+        with patch("main.tinify.from_buffer") as mock_from_buffer:
             mock_from_buffer.side_effect = tinify.errors.AccountError("API Key is wrong")
 
             #Check assert raise 
@@ -144,8 +135,7 @@ class TestMain(unittest.TestCase):
             #Check contents of raise error
             with self.assertRaises(tinify.errors.AccountError) as cm:
                 main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG, "decoded_image": pathlib.Path(secret.IMAGE_1KB).read_bytes()})
-            self.assertEqual(str(cm.exception), "Unexpected error")
-
+            self.assertEqual(str(cm.exception), "API Key is wrong")
 
 if __name__ == '__main__':
     unittest.main()
