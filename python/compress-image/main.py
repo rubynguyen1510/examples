@@ -51,7 +51,7 @@ def krakenio_impl(variables):
             optimized_url = data["kraked_url"]
             optimized_image = requests.get(optimized_url, timeout=10).content
             
-    return (optimized_image)
+    return str(base64.b64encode(optimized_image))
 
 
 def tinypng_impl(variables):
@@ -62,7 +62,7 @@ def tinypng_impl(variables):
         raise type(error)(str(error))
     except Exception as error:
         raise Exception(str(error))
-    return optimized_image
+    return str(base64.b64encode(optimized_image))
 
 
 def validate_payload(req):
@@ -131,5 +131,5 @@ def main(req, res):
         })
     return res.json({
         "success:": True,
-        "image": str(base64.b64encode(optimized_image))
+        "image": (optimized_image)
     })
