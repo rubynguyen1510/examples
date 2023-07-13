@@ -10,21 +10,35 @@ import main
 
 
 class TestTinypng(unittest.TestCase):
-    # def test_tinypng_small(self):
-    #     want = (pathlib.Path(secret.RESULT_1KB_TINYPNG).
-    #             read_text(encoding="utf-8"))
-    #     got = main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG,
-    #                              "decoded_image": pathlib.Path(secret.IMAGE_1KB).read_bytes()})
-    #     self.assertEqual(got, want)
+    """
+    Class for testing the functionality of the 'tinypng_impl' function
+    """
+    def test_tinypng_small(self):
+        """
+        Test case for optimizing a 1kb image using the 'tinypng_impl' function.
+        """
+        want = (pathlib.Path(secret.RESULT_1KB_TINYPNG).
+                read_text(encoding="utf-8"))
+        got = main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG,
+                                 "decoded_image":
+                                 pathlib.Path(secret.IMAGE_1KB).read_bytes()})
+        self.assertEqual(got, want)
 
-    # def test_tinypng_big(self):
-    #     want = (pathlib.Path(secret.RESULT_3MB_TINYPNG).
-    #             read_text(encoding="utf-8"))
-    #     got = main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG,
-    #                              "decoded_image": pathlib.Path(secret.IMAGE_3MB).read_bytes()})
-    #     self.assertEqual(got, want)
+    def test_tinypng_big(self):
+        """
+        Test case for optimizing a 3MB image using the 'tinypng_impl' function.
+        """
+        want = (pathlib.Path(secret.RESULT_3MB_TINYPNG).
+                read_text(encoding="utf-8"))
+        got = main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG,
+                                 "decoded_image":
+                                 pathlib.Path(secret.IMAGE_3MB).read_bytes()})
+        self.assertEqual(got, want)
 
     def test_tinypng_credential(self):
+        """
+        Test case for handling Account errors in the 'tinypng_impl' function.
+        """
         # Empty Credentials
         self.assertRaises(tinify.errors.AccountError, main.tinypng_impl,
                           {"api_key": "",
@@ -36,7 +50,10 @@ class TestTinypng(unittest.TestCase):
                            "decoded_image": pathlib.Path(secret.IMAGE_1KB).
                            read_bytes()})
 
-    def test_tinypng_image(self):
+    def test_tinypng_Client(self):
+        """
+        Test case for Client errors in the 'tinypng_impl' function.
+        """
         # Image is Empty
         self.assertRaises(tinify.errors.ClientError, main.tinypng_impl,
                           {"api_key": secret.API_KEY_TINYPNG,
@@ -44,9 +61,13 @@ class TestTinypng(unittest.TestCase):
         # Corrupted Image
         self.assertRaises(tinify.errors.ClientError, main.tinypng_impl,
                           {"api_key": secret.API_KEY_TINYPNG,
-                           "decoded_image": b"ORw0KGgoAAAANSUhEUgAAABEAAAAOCAMAAAD+M"} )
+                           "decoded_image":
+                           b"ORw0KGgoAAAANSUhEUgAAABEAAAAOCAMAAAD+M"})
 
     def test_tinypng_keys(self):
+        """
+        Test case for handling Key errors in the 'tinypng_impl' function.
+        """
         # Accessing wrong key
         self.assertRaises(KeyError, main.tinypng_impl,
                           {"a": secret.API_KEY_TINYPNG,
@@ -67,6 +88,9 @@ class TestTinypng(unittest.TestCase):
                            "": pathlib.Path(secret.IMAGE_1KB).read_bytes()})
 
     def test_tinypng_variables(self):
+        """
+        Test case for handling variable errors in the 'tinypng_impl' function.
+        """
         # Empty variables
         self.assertRaises(KeyError, main.tinypng_impl, {})
         # Missing decoded_image variable
@@ -77,32 +101,57 @@ class TestTinypng(unittest.TestCase):
                           {"decoded_image": b"123"})
 
     def test_tinypng_impl_basic_functionality_3MB(self):
+        """
+        Test case for basic functionality of 'tinypng_impl'
+        with a 3MB image using Mock.
+        """
         with patch("main.tinify.from_buffer") as mock_from_buffer:
-            # Strip the string. In our testcase we have b"Encoded Information" so we would need to clean it.
-            stripped_string = (pathlib.Path(secret.RESULT_3MB_TINYPNG).read_text(encoding="utf-8"))[2:-1]
-            # Set up the mock return value. To mock the return value we would give it the decoded result
+            # Strip the string. In our testcase we have b"Encoded Information"
+            # so we would need to clean it.
+            stripped_string = (pathlib.Path(secret.RESULT_3MB_TINYPNG).
+                               read_text(encoding="utf-8"))[2:-1]
+            # Set up the mock return value. To mock the return value we would
+            # give it the decoded result
             mock_from_buffer.return_value.to_buffer.return_value = (base64.b64decode(stripped_string))
             # Assert the expected result
-            optimized_image = main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG, "decoded_image": pathlib.Path(secret.IMAGE_3MB).read_bytes()})
+            optimized_image = main.tinypng_impl({"api_key":
+                                                 secret.API_KEY_TINYPNG,
+                                                 "decoded_image":
+                                                 pathlib.Path(secret.IMAGE_3MB).read_bytes()})
             # Check if the return type is a string
             self.assertIsInstance(optimized_image, str)
             # Check if the assert equals and is correct
-            self.assertEqual(optimized_image, str(base64.b64encode(mock_from_buffer.return_value.to_buffer.return_value)))
+            self.assertEqual(optimized_image, str(base64.b64encode(
+                                                    mock_from_buffer.
+                                                    return_value.
+                                                    to_buffer.return_value)))
 
     def test_tinypng_impl_basic_functionality_1kb(self):
+        """
+        Test case for basic functionality of 'tinypng_impl' with a 1kb image
+        """
         with patch("main.tinify.from_buffer") as mock_from_buffer:
-            # Strip the string. In our testcase we have b"Encoded Information" so we would need to clean it.
-            stripped_string = (pathlib.Path(secret.RESULT_1KB_TINYPNG).read_text(encoding="utf-8"))[2:-1]
-            # Set up the mock return value. To mock the return value we would give it the decoded result
+            # Strip the string. In our testcase we have b"Encoded Information"
+            # so we would need to clean it.
+            stripped_string = (pathlib.Path(secret.RESULT_1KB_TINYPNG).
+                               read_text(encoding="utf-8"))[2:-1]
+            # Set up the mock return value. To mock the return value we would
+            # give it the decoded result
             mock_from_buffer.return_value.to_buffer.return_value = (base64.b64decode(stripped_string))
             # Assert the expected result
-            optimized_image = main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG, "decoded_image": pathlib.Path(secret.IMAGE_1KB).read_bytes()})
+            optimized_image = main.tinypng_impl({"api_key":
+                                                 secret.API_KEY_TINYPNG,
+                                                 "decoded_image":
+                                                 pathlib.Path(secret.IMAGE_1KB).read_bytes()})
             # Check if the return type is a string
             self.assertIsInstance(optimized_image, str)
             # Check if the assert equals and is correct
             self.assertEqual(optimized_image, str(base64.b64encode(mock_from_buffer.return_value.to_buffer.return_value)))
 
     def test_tinypng_impl_unexpected_exception_accountError(self):
+        """
+        Test case for handling unexpected 'AccountError' exception in 'tinypng_impl'.
+        """
         with patch("main.tinify.from_buffer") as mock_from_buffer:
             mock_from_buffer.side_effect = tinify.errors.AccountError("API Key is wrong")
             self.assertRaises(tinify.errors.AccountError,
@@ -113,6 +162,9 @@ class TestTinypng(unittest.TestCase):
             mock_from_buffer.assert_called_once()
 
     def test_tinypng_impl_unexpected_exception_clientError(self):
+        """
+        Test case for handling unexpected 'ClientError' exception in 'tinypng_impl'.
+        """
         with patch("main.tinify.from_buffer") as mock_from_buffer:
             mock_from_buffer.side_effect = tinify.errors.ClientError("Image is incorrect")
             self.assertRaises(tinify.errors.ClientError,
