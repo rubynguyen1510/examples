@@ -176,25 +176,25 @@ class TestTinypng(unittest.TestCase):
 
 
 class TestKrakenIO(unittest.TestCase):
-    # def test_krakenio_small(self):
-    #     # Output validation 1KB
-    #     want = (pathlib.Path(secret.RESULT_1KB_KRAKENIO).read_text(encoding="utf-8"))
-    #     got = main.krakenio_impl({"api_key": secret.API_KEY_KRAKENIO,
-    #                               "api_secret_key":
-    #                               secret.SECRET_API_KEY_KRAKENIO,
-    #                               "decoded_image": pathlib.Path(secret.IMAGE_1KB).
-    #                               read_bytes()})
-    #     self.assertEqual(got, want)
+    def test_krakenio_small(self):
+        # Output validation 1KB
+        want = (pathlib.Path(secret.RESULT_1KB_KRAKENIO).read_text(encoding="utf-8"))
+        got = main.krakenio_impl({"api_key": secret.API_KEY_KRAKENIO,
+                                  "api_secret_key":
+                                  secret.SECRET_API_KEY_KRAKENIO,
+                                  "decoded_image": pathlib.Path(secret.IMAGE_1KB).
+                                  read_bytes()})
+        self.assertEqual(got, want)
 
-    # def test_krakenio_big(self):
-    #     # Output validation 3MB
-    #     want = (pathlib.Path(secret.RESULT_3MB_KRAKENIO).read_text(encoding="utf-8"))
-    #     got = main.krakenio_impl({"api_key": secret.API_KEY_KRAKENIO,
-    #                               "api_secret_key":
-    #                               secret.SECRET_API_KEY_KRAKENIO,
-    #                               "decoded_image": pathlib.Path(secret.IMAGE_3MB).
-    #                               read_bytes()})
-    #     self.assertEqual(got, want)
+    def test_krakenio_big(self):
+        # Output validation 3MB
+        want = (pathlib.Path(secret.RESULT_3MB_KRAKENIO).read_text(encoding="utf-8"))
+        got = main.krakenio_impl({"api_key": secret.API_KEY_KRAKENIO,
+                                  "api_secret_key":
+                                  secret.SECRET_API_KEY_KRAKENIO,
+                                  "decoded_image": pathlib.Path(secret.IMAGE_3MB).
+                                  read_bytes()})
+        self.assertEqual(got, want)
 
     def test_krakenio_wrong_api_key(self):
         self.assertRaises(requests.exceptions.HTTPError, main.krakenio_impl,
@@ -343,7 +343,7 @@ class TestValidateRequest(unittest.TestCase):
 
 
 class TestMain(unittest.TestCase):
-    def test_main(self):
+    def test_main_tinypng(self):
         # Output validation 1KB
         want = {
             "success:": True,
@@ -367,6 +367,33 @@ class TestMain(unittest.TestCase):
         got = res.json()
         self.maxDiff = None
         self.assertEqual(got, want)
+
+    def test_main_krakenio(self):
+        # Output validation 1KB
+        want = {
+            "success:": True,
+            "image": pathlib.Path(secret.RESULT_1KB_KRAKENIO).read_text(encoding="utf-8")
+        }
+
+        req = MockRequest({
+            "payload": {
+                "provider": "krakenio",
+                "image": str(base64.b64encode(pathlib.Path(secret.IMAGE_1KB).read_bytes()), "utf-8")
+            },
+            "variables": {
+                "API_KEY": secret.API_KEY_KRAKENIO,
+                "SECRET_API_KEY": secret.SECRET_API_KEY_KRAKENIO
+            }
+        })
+
+        res = MockResponse()  # Create a mock response object
+        main.main(req, res)
+
+        # Check the response
+        got = res.json()
+        self.maxDiff = None
+        self.assertEqual(got, want)
+    
 
 
 # Define a mock request class
