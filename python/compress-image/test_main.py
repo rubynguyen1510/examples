@@ -187,7 +187,7 @@ class TestKrakenIO(unittest.TestCase):
             mock_post.assert_called_once()
 
 
-class TestValidatePayload(unittest.TestCase):
+class TestValidateRequest(unittest.TestCase):
     def test_validate_request(self):
         test_cases = [
             {
