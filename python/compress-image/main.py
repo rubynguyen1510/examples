@@ -92,7 +92,8 @@ def tinypng_impl(variables):
     try:
         optimized_image = (tinify.from_buffer(variables["decoded_image"]).
                            to_buffer())
-    except (tinify.errors.AccountError, tinify.errors.ClientError, KeyError) as tinify_error:
+    except (tinify.errors.AccountError, tinify.errors.ClientError, KeyError) \
+            as tinify_error:
         raise type(tinify_error)(str(tinify_error))
     except Exception as exception_error:
         raise Exception(str(exception_error))
