@@ -5,6 +5,7 @@ from unittest.mock import patch
 import secret
 import tinify
 import main
+import requests
 from parameterized import parameterized
 
 IMAGE_1KB = pathlib.Path(secret.IMAGE_1KB).read_bytes()
@@ -122,6 +123,17 @@ class TestKrakenIO(unittest.TestCase):
             "decoded_image": IMAGE_1KB
         })
         self.assertEqual(got, base64.b64decode(want))
+
+    def test_krakenio_time_out(self):
+        with patch("main.requests.post") as mock_post:
+            mock_post.side_effect = requests.exceptions.ReadTimeout
+            with self.assertRaises(requests.exceptions.ReadTimeout):
+                main.krakenio_impl({
+                    "api_key": secret.API_KEY_KRAKENIO,
+                    "api_secret_key": secret.SECRET_API_KEY_KRAKENIO,
+                    "decoded_image": IMAGE_1KB
+                })
+            mock_post.assert_called_once()
 
 
 class TestValidateRequest(unittest.TestCase):
