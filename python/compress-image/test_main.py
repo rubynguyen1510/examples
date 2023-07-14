@@ -13,9 +13,7 @@ RESULT_1KB = (pathlib.Path(secret.RESULT_1KB_TINYPNG).
 
 
 class TestTinypng(unittest.TestCase):
-    """
-    Class for testing the functionality of the 'tinypng_impl' function
-    """
+    """Class for testing the functionality of the 'tinypng_impl' function"""
     @unittest.skipIf(not secret.API_KEY_TINYPNG, "No Tinypng API Key set")
     def test_tinypng_small(self):
         """Test case optimizing 1kb image using 'tinypng_impl' function."""
@@ -26,7 +24,7 @@ class TestTinypng(unittest.TestCase):
 
     def test_tinypng_credential(self):
         """Test case handling Account errors in the 'tinypng_impl' function."""
-        # # Incorrect Credentials
+        # Incorrect Credentials
         self.assertRaises(tinify.errors.AccountError, main.tinypng_impl,
                           {"api_key": "1NCORRECT4CREDENT1ALS",
                            "decoded_image": IMAGE_1KB})
@@ -54,7 +52,6 @@ class TestTinypng(unittest.TestCase):
         self.assertRaises(KeyError, main.tinypng_impl,
                           {"api_key": secret.API_KEY_TINYPNG,
                            "code_image": IMAGE_1KB})
-
         # Empty Key
         self.assertRaises(KeyError, main.tinypng_impl,
                           {"": secret.API_KEY_TINYPNG,
@@ -62,10 +59,6 @@ class TestTinypng(unittest.TestCase):
         self.assertRaises(KeyError, main.tinypng_impl,
                           {"api_key": secret.API_KEY_TINYPNG,
                            "": IMAGE_1KB})
-        
-    @unittest.skipIf(not secret.API_KEY_TINYPNG, "No Tinypng API Key set")
-    def test_tinypng_variables(self):
-        """Test case handling variable errors in the 'tinypng_impl' function"""
         # Empty variables
         self.assertRaises(KeyError, main.tinypng_impl, {})
         # One key in variable
@@ -76,8 +69,7 @@ class TestTinypng(unittest.TestCase):
     def test_tinypng_impl_basic_functionality_1kb(self):
         """basic functionality of 'tinypng_impl' with a 1kb image"""
         with patch("main.tinify.from_buffer") as mock_from_buffer:
-            # Set up the mock return value. To mock the return value we would
-            # give it the decoded result
+            # Set up the mock return value as decoded result
             mock_from_buffer.return_value.to_buffer.return_value = \
                 (base64.b64decode(RESULT_1KB))
             # Assert the expected result
@@ -93,8 +85,10 @@ class TestTinypng(unittest.TestCase):
     def test_tinypng_impl_unexpected_exception_account_error(self):
         """Test case handling unexpected 'AccountError' in 'tinypng_impl'"""
         with patch("main.tinify.from_buffer") as mock_from_buffer:
+            # Set up the mock return value as account exception
             mock_from_buffer.side_effect = \
                 tinify.errors.AccountError("API Key is wrong")
+            # Check the raise for Account error
             self.assertRaises(tinify.errors.AccountError,
                               main.tinypng_impl,
                               {"api_key": secret.API_KEY_TINYPNG,
@@ -105,8 +99,10 @@ class TestTinypng(unittest.TestCase):
     def test_tinypng_impl_unexpected_exception_client_error(self):
         """Test case handling unexpected 'ClientError' in 'tinypng_impl'."""
         with patch("main.tinify.from_buffer") as mock_from_buffer:
+            # Set up the mock return value as client exception
             mock_from_buffer.side_effect = \
                 tinify.errors.ClientError("Image is incorrect")
+            # Check the raise for client error
             self.assertRaises(tinify.errors.ClientError,
                               main.tinypng_impl,
                               {"api_key": secret.API_KEY_TINYPNG,
@@ -117,7 +113,7 @@ class TestTinypng(unittest.TestCase):
 class TestKrakenIO(unittest.TestCase):
     @unittest.skipIf(not (secret.API_KEY_KRAKENIO and secret.SECRET_API_KEY_KRAKENIO), "No KrakenIO API Key or Secret Key")
     def test_krakenio(self):
-        # Output validation 1KB
+        """Output validation 1KB"""
         want = (pathlib.Path(
             secret.RESULT_1KB_KRAKENIO).read_text(encoding="utf-8"))
         got = main.krakenio_impl({

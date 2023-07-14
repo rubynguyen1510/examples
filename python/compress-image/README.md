@@ -50,8 +50,8 @@ List of environment variables used by this cloud function:
 1. Clone this repository, and enter this function folder:
 
 ```bash
-git clone https://github.com/open-runtimes/examples.git && cd examples
-cd python/compress-image
+git clone https://github.com/open-runtimes/examples.git
+cd examples/python/compress-image
 ```
 
 2. Enter this function folder and build the code:

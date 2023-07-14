@@ -12,18 +12,16 @@ KRAKEN_USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; Win64; x64)AppleWebKit/\
 def krakenio_impl(variables):
     """
     Implements image optimization using the Kraken.io API.
-
     Input:
         variables (dict): A dictionary containing the
                           required variables for optimization.
-
     Returns:
         bytes: decoded optimized image.
     """
     optimized_image = None
     # Headers for post request
     headers = {"User-Agent": KRAKEN_USER_AGENT}
-    # File that we will pass in
+    # Image that we will pass in
     files = {"file": variables["decoded_image"]}
     # Parameters for post request
     params = {
@@ -52,11 +50,9 @@ def krakenio_impl(variables):
 def tinypng_impl(variables):
     """
     Implements image optimization using the Tinypng API.
-
     Input:
         variables (dict): A dictionary containing the required variables
         for optimization. Includes api_key and decoded_image.
-
     Returns:
         bytes: decoded optimized image.
     """
@@ -69,13 +65,10 @@ def tinypng_impl(variables):
 def validate_request(req):
     """
     Validates the request and extracts the necessary information.
-
     Input:
         req: The request object containing the payload and variables.
-
     Returns:
         dict: A dictionary containing the validated payload information.
-
     Raises:
         ValueError: If any required value is missing or invalid.
     """
