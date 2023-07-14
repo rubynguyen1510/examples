@@ -128,6 +128,7 @@ class TestKrakenIO(unittest.TestCase):
         })
         self.assertEqual(got, base64.b64decode(want))
 
+    @unittest.skipIf(not (secret.API_KEY_KRAKENIO and secret.SECRET_API_KEY_KRAKENIO), "No KrakenIO API Key or Secret Key")
     def test_krakenio_time_out(self):
         with patch("main.requests.post") as mock_post:
             mock_post.side_effect = requests.exceptions.ReadTimeout
