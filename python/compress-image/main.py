@@ -7,6 +7,10 @@ import json
 import tinify
 import requests
 
+KRAKEN_API_ENDPOINT = "https://api.kraken.io/v1/upload"
+KRAKEN_USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; Win64; x64)AppleWebKit/\
+                537.36(KHTML, like Gecko)Chrome/40.0.2214.85 Safari/537.36"
+
 
 def krakenio_impl(variables):
     """
@@ -27,15 +31,8 @@ def krakenio_impl(variables):
         Exception: For any other unexpected errors.
     """
     optimized_image = None
-    # Kraken Url for uploading media
-    url = "https://api.kraken.io/v1/"
-    api_endpoint = url + "upload"
     # Headers for post request
-    headers = {
-        "User-Agent":
-        "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 \
-        (KHTML, like Gecko) Chrome/40.0.2214.85 Safari/537.36"
-    }
+    headers = {"User-Agent": KRAKEN_USER_AGENT}
     # File that we will pass in
     files = {"file": variables["decoded_image"]}
     # Parameters for post request
@@ -47,20 +44,13 @@ def krakenio_impl(variables):
         "wait": True,  # Optional: Wait for the optimization to complete
         "dev": False  # Optional: Set to false to use API
     }
-    try:
-        response = requests.post(url=api_endpoint,
-                                 headers=headers,
-                                 files=files,
-                                 data={"data": json.dumps(params)},
-                                 timeout=10)
-        response.raise_for_status()
-    except (requests.exceptions.HTTPError, requests.exceptions.ReadTimeout,
-            requests.exceptions.ConnectionError) as request_error:
-        raise type(request_error)(str(request_error))
-    except Exception as exception_error:
-        raise Exception(str(exception_error))
+    response = requests.post(url=KRAKEN_API_ENDPOINT,
+                             headers=headers,
+                             files=files,
+                             data={"data": json.dumps(params)},
+                             timeout=10)
     # Check status code of response
-    if response.status_code == 200:
+    if response.ok:
         # Request successful, parse the response
         data = response.json()
         if data["success"] is True:
