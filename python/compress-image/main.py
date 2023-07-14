@@ -1,7 +1,4 @@
-
-"""
-base64 import
-"""
+""" Compress image function using Tinypng and Krakenio API """
 import base64
 import json
 import tinify
@@ -21,14 +18,7 @@ def krakenio_impl(variables):
                           required variables for optimization.
 
     Returns:
-        str: Base64 encoded optimized image.
-
-    Raises:
-        requests.exceptions.HTTPError: If there is an HTTP
-                                       error during the API request.
-        requests.exceptions.ReadTimeout: If the API request times out.
-        requests.exceptions.ConnectionError: If there is a connection error.
-        Exception: For any other unexpected errors.
+        bytes: decoded optimized image.
     """
     optimized_image = None
     # Headers for post request
@@ -53,7 +43,7 @@ def krakenio_impl(variables):
     if response.ok:
         # Request successful, parse the response
         data = response.json()
-        if data["success"] is True:
+        if data["success"]:
             optimized_url = data["kraked_url"]
             optimized_image = requests.get(optimized_url, timeout=10).content
     return optimized_image
@@ -68,26 +58,12 @@ def tinypng_impl(variables):
         for optimization. Includes api_key and decoded_image.
 
     Returns:
-        str: Base64 encoded optimized image.
-
-    Raises:
-        tinify.errors.AccountError: If there is an account-related error
-                                    during the API request.
-        tinify.errors.ClientError: If there is a client-related error during
-                                   the API request.
-        KeyError: If a required key is missing in the variables dictionary.
-        Exception: For any other unexpected errors.
+        bytes: decoded optimized image.
     """
     tinify.key = variables["api_key"]
-    try:
-        optimized_image = (tinify.from_buffer(variables["decoded_image"]).
-                           to_buffer())
-    except (tinify.errors.AccountError, tinify.errors.ClientError, KeyError) \
-            as tinify_error:
-        raise type(tinify_error)(str(tinify_error))
-    except Exception as exception_error:
-        raise Exception(str(exception_error))
-    return str(base64.b64encode(optimized_image))
+    optimized_image = (tinify.from_buffer(
+        variables["decoded_image"]).to_buffer())
+    return optimized_image
 
 
 def validate_request(req):
@@ -103,38 +79,40 @@ def validate_request(req):
     Raises:
         ValueError: If any required value is missing or invalid.
     """
-    # Accessing payload
-    if req.payload == {}:
+    # Check if payload is empty
+    if not req.payload:
         raise ValueError("Missing payload")
     # Accessing provider from payload
-    if req.payload["provider"] is None or req.payload["provider"].lower(
-    ) not in ["krakenio", "tinypng"]:
-        raise ValueError("Invalid provider.")
-    # Acccessing variables
-    if req.variables == {}:
+    if not req.payload.get("provider"):
+        raise ValueError("Missing provider")
+    # Check if payload is not empty
+    if not req.variables:
         raise ValueError("Missing variables.")
     # Accessing api_key from variables
-    if req.variables["API_KEY"] == "":
-        raise ValueError("Missing API key.")
+    if not req.variables.get("API_KEY"):
+        raise ValueError("Missing API_KEY")
     # Accessing encoded image from payload
-    if req.payload["image"] == "":
-        raise ValueError("Missing encoded image.")
+    if not req.payload.get("image"):
+        raise ValueError("Missing encoding image")
     result = {
-        "provider": req.payload["provider"],
-        "api_key": req.variables["API_KEY"],
-        "decoded_image": base64.b64decode(req.payload["image"])
+        "provider": req.payload.get("provider").lower(),
+        "api_key": req.variables.get("API_KEY"),
+        "decoded_image": base64.b64decode(req.payload.get("image"))
     }
     # Get secret key
-    if req.payload["provider"] == "krakenio":
-        if req.variables["SECRET_API_KEY"] == "":
+    if req.payload.get("provider") == "krakenio":
+        if not req.variables.get("SECRET_API_KEY"):
             raise ValueError("Missing api secret key.")
-        result["api_secret_key"] = req.variables["SECRET_API_KEY"]
+        result["api_secret_key"] = req.variables.get("SECRET_API_KEY")
     return result
+
+
+IMPLEMENTATIONS = {"krakenio": krakenio_impl, "tinypng": tinypng_impl}
 
 
 def main(req, res):
     """
-    The main function that runs Validate Payload and calls implementations.
+    The main function that runs Validate Payload and calls IMPLEMENTATIONS.
 
     Input:
         req: The request object.
@@ -145,30 +123,16 @@ def main(req, res):
     """
     try:
         variables = validate_request(req)
-    except (ValueError, KeyError) as payload_error:
-        return res.json({
-            "success": False,
-            str(type(payload_error).__name__): str(payload_error)
-        })
-    implementations = {
-        "krakenio": krakenio_impl,
-        "tinypng": tinypng_impl
-    }
+    except (ValueError) as payload_error:
+        return res.json({"success": False, "Value Error": str(payload_error)})
     try:
-        optimized_image = implementations[variables["provider"]](variables)
-    except (requests.exceptions.HTTPError, requests.exceptions.ReadTimeout,
-            requests.exceptions.ConnectionError, tinify.errors.AccountError,
-            tinify.errors.ClientError, KeyError) as implementation_error:
-        return res.json({
-            "success": False,
-            str(type(implementation_error).__name__): str(implementation_error)
-        })
+        optimized_image = IMPLEMENTATIONS[variables["provider"]](variables)
     except Exception as error:
         return res.json({
             "success": False,
-            "Error": str(error)
+            "error": f"{str(type(error).__name__)} {str(error)}"
         })
     return res.json({
         "success:": True,
-        "image": (optimized_image)
+        "image": base64.b64encode(optimized_image).decode()
     })
