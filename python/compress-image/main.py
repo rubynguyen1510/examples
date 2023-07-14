@@ -56,7 +56,7 @@ def krakenio_impl(variables):
         if data["success"] is True:
             optimized_url = data["kraked_url"]
             optimized_image = requests.get(optimized_url, timeout=10).content
-    return str(base64.b64encode(optimized_image))
+    return optimized_image
 
 
 def tinypng_impl(variables):
