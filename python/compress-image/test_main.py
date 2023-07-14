@@ -14,9 +14,7 @@ RESULT_1KB = (pathlib.Path(secret.RESULT_1KB_TINYPNG).
 
 
 class TestTinypng(unittest.TestCase):
-    """
-    Class for testing the functionality of the 'tinypng_impl' function
-    """
+    """Class for testing the functionality of the 'tinypng_impl' function"""
     @unittest.skipIf(not secret.API_KEY_TINYPNG, "No Tinypng API Key set")
     def test_tinypng_small(self):
         """Test case optimizing 1kb image using 'tinypng_impl' function."""
@@ -63,7 +61,7 @@ class TestTinypng(unittest.TestCase):
         self.assertRaises(KeyError, main.tinypng_impl,
                           {"api_key": secret.API_KEY_TINYPNG,
                            "": IMAGE_1KB})
-        
+
     @unittest.skipIf(not secret.API_KEY_TINYPNG, "No Tinypng API Key set")
     def test_tinypng_variables(self):
         """Test case handling variable errors in the 'tinypng_impl' function"""
@@ -88,7 +86,9 @@ class TestTinypng(unittest.TestCase):
             # Check if the return type is a string
             self.assertIsInstance(optimized_image, bytes)
             # Check if the assert equals and is correct
-            self.assertEqual(optimized_image, (mock_from_buffer.return_value.to_buffer.return_value))
+            self.assertEqual(
+                optimized_image,
+                mock_from_buffer.return_value.to_buffer.return_value)
 
     @unittest.skipIf(not secret.API_KEY_TINYPNG, "No Tinypng API Key set")
     def test_tinypng_impl_unexpected_exception_account_error(self):
@@ -116,7 +116,9 @@ class TestTinypng(unittest.TestCase):
 
 
 class TestKrakenIO(unittest.TestCase):
-    @unittest.skipIf(not (secret.API_KEY_KRAKENIO and secret.SECRET_API_KEY_KRAKENIO), "No KrakenIO API Key or Secret Key")
+    @unittest.skipIf(not (secret.API_KEY_KRAKENIO
+                          and secret.SECRET_API_KEY_KRAKENIO),
+                     "No KrakenIO API Key or Secret Key")
     def test_krakenio(self):
         # Output validation 1KB
         want = (pathlib.Path(
@@ -128,7 +130,9 @@ class TestKrakenIO(unittest.TestCase):
         })
         self.assertEqual(got, base64.b64decode(want))
 
-    @unittest.skipIf(not (secret.API_KEY_KRAKENIO and secret.SECRET_API_KEY_KRAKENIO), "No KrakenIO API Key or Secret Key")
+    @unittest.skipIf(not (secret.API_KEY_KRAKENIO
+                          and secret.SECRET_API_KEY_KRAKENIO),
+                     "No KrakenIO API Key or Secret Key")
     def test_krakenio_time_out(self):
         with patch("main.requests.post") as mock_post:
             mock_post.side_effect = requests.exceptions.ReadTimeout
@@ -178,8 +182,10 @@ class TestValidateRequest(unittest.TestCase):
             }
         ]
     ])
-
-    @unittest.skipIf(not (secret.API_KEY_KRAKENIO and secret.SECRET_API_KEY_KRAKENIO and secret.API_KEY_TINYPNG), "No Tinypng Key and KrakenIO Key")
+    @unittest.skipIf(not (secret.API_KEY_KRAKENIO
+                          and secret.SECRET_API_KEY_KRAKENIO
+                          and secret.API_KEY_TINYPNG),
+                     "No Tinypng Key and KrakenIO Key")
     def test_validate_request(self, got, expected):
         req = MyRequest({
             "payload": got["payload"],
@@ -242,7 +248,7 @@ class TestValidateRequest(unittest.TestCase):
         with self.assertRaises(ValueError) as context:
             main.validate_request(req)
             self.assertEqual(str(context.exception), want)
-        
+
     @parameterized.expand([
         [
             {
