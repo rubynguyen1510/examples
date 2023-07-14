@@ -32,7 +32,7 @@ def krakenio_impl(variables):
             "api_secret": variables["api_secret_key"]
         },
         "wait": True,  # Optional: Wait for the optimization to complete
-        "dev": False  # Optional: Set to false to use API
+        "dev": False  # Optional: Set to false to enter user mode.
     }
     response = requests.post(url=KRAKEN_API_ENDPOINT,
                              headers=headers,
@@ -133,6 +133,6 @@ def main(req, res):
             "error": f"{str(type(error).__name__)} {str(error)}"
         })
     return res.json({
-        "success:": True,
+        "success": True,
         "image": base64.b64encode(optimized_image).decode()
     })
