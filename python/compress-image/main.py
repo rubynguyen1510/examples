@@ -112,8 +112,8 @@ def validate_request(req):
 
 
 IMPLEMENTATIONS = {
-    "krakenio": krakenio_impl,
-    "tinypng": tinypng_impl,
+        "krakenio": krakenio_impl,
+        "tinypng": tinypng_impl,
     }
 
 
