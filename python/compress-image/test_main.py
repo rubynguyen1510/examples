@@ -50,7 +50,7 @@ class TestTinypng(unittest.TestCase):
             }
         )
 
-    @unittest.skipIf(not secret.API_KEY_TINYPNG, "No Tinypng API Key set")
+    @unittest.skipUnless(secret.API_KEY_TINYPNG, "No Tinypng API Key set")
     @parameterized.expand([
         (b"",),
         (b"ORw0KGgoAAAANSUhEUgAAABEAAAAOCAMAAAD+M",),
@@ -104,7 +104,7 @@ class TestTinypng(unittest.TestCase):
             }
         )
 
-    @unittest.skipIf(not secret.API_KEY_TINYPNG, "No Tinypng API Key set")
+    @unittest.skipUnless(secret.API_KEY_TINYPNG, "No Tinypng API Key set")
     def test_tinypng_variables(self):
         """Test case handling variable errors in the 'tinypng_impl' function."""
         # Empty variables
@@ -181,9 +181,8 @@ class TestTinypng(unittest.TestCase):
 
 class TestKrakenIO(unittest.TestCase):
     @unittest.skipUnless(
-        secret.API_KEY_KRAKENIO and secret.SECRET_API_KEY_KRAKENIO),
-        "No KrakenIO API Key or Secret Key"
-    )
+        secret.API_KEY_KRAKENIO and secret.SECRET_API_KEY_KRAKENIO,
+        "No KrakenIO API Key or Secret Key")
     def test_krakenio(self):
         """Output validation 1KB."""
         want = RESULT_KRAKENIO
@@ -195,18 +194,18 @@ class TestKrakenIO(unittest.TestCase):
         self.assertEqual(got, base64.b64decode(want))
 
     @unittest.skipUnless(
-        secret.API_KEY_KRAKENIO and secret.SECRET_API_KEY_KRAKENIO),
-        "No KrakenIO API Key or Secret Key"
-    )
+        secret.API_KEY_KRAKENIO and secret.SECRET_API_KEY_KRAKENIO,
+        "No KrakenIO API Key or Secret Key")
     def test_krakenio_time_out(self):
-        with patch.object("requests", "post") as mock_post:
+        with patch("main.requests.post") as mock_post:
             mock_post.side_effect = requests.exceptions.ReadTimeout
-            self.assertRaises(requests.exceptions.ReadTimeout):
+            with self.assertRaises(requests.exceptions.ReadTimeout):
                 main.krakenio_impl({
                     "api_key": secret.API_KEY_KRAKENIO,
                     "api_secret_key": secret.SECRET_API_KEY_KRAKENIO,
                     "decoded_image": IMAGE
                 })
+            mock_post.assert_called_once()
 
 
 # Define a mock request class
@@ -233,7 +232,7 @@ class TestValidateRequest(unittest.TestCase):
             {
                 "payload": {
                     "provider": "tinypng",
-                    "image": IMAGE
+                    "image": base64.b64encode(IMAGE).decode()
                 },
                 "variables": {"API_KEY": secret.API_KEY_TINYPNG},
             },
@@ -247,7 +246,7 @@ class TestValidateRequest(unittest.TestCase):
             {
                 "payload": {
                     "provider": "krakenio",
-                    "image": IMAGE
+                    "image": base64.b64encode(IMAGE).decode()
                 },
                 "variables": {
                     "API_KEY": secret.API_KEY_KRAKENIO,
@@ -280,43 +279,37 @@ class TestValidateRequest(unittest.TestCase):
             {
                 "payload": {},
                 "variables": {},
-            },
-            "Missing payload"
+            }
         ],
         [
             {
                 "payload": {"provider": "IMNOTAPROVIDER", "image": ""},
                 "variables": {"API_KEY": "1234567"},
-            },
-            "Invalid provider."
+            }
         ],
         [
             {
                 "payload": {"provider": "krakenio", "image": ""},
                 "variables": {},
-            },
-            "Missing variables."
+            }
         ],
         [
             {
                 "payload": {"provider": "tinypng", "image": "12345"},
                 "variables": {"API_KEY": ""},
-            },
-            "Missing API key."
+            }
         ],
         [
             {
                 "payload": {"provider": "krakenio", "image": "12345"},
                 "variables": {"API_KEY": "", "SECRET_API_KEY": ""},
-            },
-            "Missing API key."
+            }
         ],
         [
             {
                 "payload": {"provider": "krakenio", "image": "12345"},
                 "variables": {"API_KEY": "123", "SECRET_API_KEY": ""},
-            },
-            "Missing api secret key."
+            }
         ],
         [
             {
@@ -347,7 +340,7 @@ class TestValidateRequest(unittest.TestCase):
             }
         ],
     ])
-    def test_validate_request_value_error(self, got, want):
+    def test_validate_request_value_error(self, got):
         req = MyRequest(
             {
                 "payload": got["payload"],
@@ -362,7 +355,7 @@ class TestValidateRequest(unittest.TestCase):
 
 
 class TestMain(unittest.TestCase):
-    @unittest.skipIf(not secret.API_KEY_TINYPNG, "No Tinypng API Key set")
+    @unittest.skipUnless(secret.API_KEY_TINYPNG, "No Tinypng API Key set")
     def test_main_success(self):
         # Output validation 1KB
         want = {

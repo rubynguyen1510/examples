@@ -1,3 +1,4 @@
 code.tar.gz
 image_test/
 __pycache__/
+secret.py
