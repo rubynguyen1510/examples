@@ -111,7 +111,10 @@ def validate_request(req):
     return result
 
 
-IMPLEMENTATIONS = {"krakenio": krakenio_impl, "tinypng": tinypng_impl}
+IMPLEMENTATIONS = {
+    "krakenio": krakenio_impl,
+    "tinypng": tinypng_impl,
+    }
 
 
 def main(req, res):

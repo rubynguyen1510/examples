@@ -13,9 +13,15 @@ from parameterized import parameterized
 import main
 import secret
 
-IMAGE_1KB = pathlib.Path(secret.IMAGE_1KB).read_bytes()
-RESULT_1KB = (pathlib.Path(secret.RESULT_1KB_TINYPNG).
-              read_text(encoding="utf-8"))
+IMAGE = pathlib.Path("test/1kb.png").read_bytes()
+
+RESULT_TINYPNG = (
+    pathlib.Path("test/1kb_result_encoded_tinypng.txt").
+    read_text(encoding="utf-8"))
+
+RESULT_KRAKENIO = (
+    pathlib.Path("test/1kb_result_encoded_krakenio.txt").
+    read_text(encoding="utf-8"))
 
 
 class TestTinypng(unittest.TestCase):
@@ -23,10 +29,10 @@ class TestTinypng(unittest.TestCase):
     @unittest.skipUnless(secret.API_KEY_TINYPNG, "No Tinypng API Key set")
     def test_tinypng_small(self):
         """Test case optimizing 1kb image using 'tinypng_impl' function."""
-        want = RESULT_1KB
+        want = RESULT_TINYPNG
         got = main.tinypng_impl({
             "api_key": secret.API_KEY_TINYPNG,
-            "decoded_image": IMAGE_1KB,
+            "decoded_image": IMAGE,
         })
         self.assertEqual(base64.b64encode(got).decode(), want)
 
@@ -35,7 +41,7 @@ class TestTinypng(unittest.TestCase):
         # Incorrect Credentials
         self.assertRaises(tinify.errors.AccountError, main.tinypng_impl,
                           {"api_key": "1NCORRECT4CREDENT1ALS",
-                           "decoded_image": IMAGE_1KB})
+                           "decoded_image": IMAGE})
 
     @unittest.skipIf(not secret.API_KEY_TINYPNG, "No Tinypng API Key set")
     @parameterized([
@@ -59,17 +65,17 @@ class TestTinypng(unittest.TestCase):
         # Accessing wrong key
         self.assertRaises(KeyError, main.tinypng_impl,
                           {"a": secret.API_KEY_TINYPNG,
-                           "decoded_image": IMAGE_1KB})
+                           "decoded_image": IMAGE})
         self.assertRaises(KeyError, main.tinypng_impl,
                           {"api_key": secret.API_KEY_TINYPNG,
-                           "code_image": IMAGE_1KB})
+                           "code_image": IMAGE})
         # Empty Key
         self.assertRaises(KeyError, main.tinypng_impl,
                           {"": secret.API_KEY_TINYPNG,
-                           "code_image": IMAGE_1KB})
+                           "code_image": IMAGE})
         self.assertRaises(KeyError, main.tinypng_impl,
                           {"api_key": secret.API_KEY_TINYPNG,
-                           "": IMAGE_1KB})
+                           "": IMAGE})
 
     @unittest.skipIf(not secret.API_KEY_TINYPNG, "No Tinypng API Key set")
     def test_tinypng_variables(self):
@@ -86,11 +92,11 @@ class TestTinypng(unittest.TestCase):
         with patch("main.tinify.from_buffer") as mock_from_buffer:
             # Set up the mock return value as decoded result
             mock_from_buffer.return_value.to_buffer.return_value = (
-                base64.b64decode(RESULT_1KB))
+                base64.b64decode(RESULT_TINYPNG))
             # Assert the expected result
             optimized_image = main.tinypng_impl({
                 "api_key": secret.API_KEY_TINYPNG,
-                "decoded_image": IMAGE_1KB,
+                "decoded_image": IMAGE,
             })
             # Check if the return type is a string
             self.assertIsInstance(optimized_image, bytes)
@@ -111,7 +117,7 @@ class TestTinypng(unittest.TestCase):
             self.assertRaises(tinify.errors.AccountError,
                               main.tinypng_impl,
                               {"api_key": secret.API_KEY_TINYPNG,
-                               "decoded_image": IMAGE_1KB})
+                               "decoded_image": IMAGE})
             mock_from_buffer.assert_called_once()
 
     @unittest.skipIf(not secret.API_KEY_TINYPNG, "No Tinypng API Key set")
@@ -125,7 +131,7 @@ class TestTinypng(unittest.TestCase):
             self.assertRaises(tinify.errors.ClientError,
                               main.tinypng_impl,
                               {"api_key": secret.API_KEY_TINYPNG,
-                               "decoded_image": IMAGE_1KB})
+                               "decoded_image": IMAGE})
             mock_from_buffer.assert_called_once()
 
 
@@ -135,12 +141,11 @@ class TestKrakenIO(unittest.TestCase):
                      "No KrakenIO API Key or Secret Key")
     def test_krakenio(self):
         """Output validation 1KB"""
-        want = (pathlib.Path(
-            secret.RESULT_1KB_KRAKENIO).read_text(encoding="utf-8"))
+        want = RESULT_KRAKENIO
         got = main.krakenio_impl({
             "api_key": secret.API_KEY_KRAKENIO,
             "api_secret_key": secret.SECRET_API_KEY_KRAKENIO,
-            "decoded_image": IMAGE_1KB
+            "decoded_image": IMAGE
         })
         self.assertEqual(got, base64.b64decode(want))
 
@@ -154,7 +159,7 @@ class TestKrakenIO(unittest.TestCase):
                 main.krakenio_impl({
                     "api_key": secret.API_KEY_KRAKENIO,
                     "api_secret_key": secret.SECRET_API_KEY_KRAKENIO,
-                    "decoded_image": IMAGE_1KB
+                    "decoded_image": IMAGE
                 })
             mock_post.assert_called_once()
 
@@ -165,23 +170,21 @@ class TestValidateRequest(unittest.TestCase):
             {
                 "payload": {
                     "provider": "tinypng",
-                    "image": str(base64.b64encode(pathlib.Path(
-                        secret.IMAGE_1KB).read_bytes()), "utf-8")
+                    "image": IMAGE
                 },
                 "variables": {"API_KEY": secret.API_KEY_TINYPNG},
             },
             {
                 "provider": "tinypng",
                 "api_key": secret.API_KEY_TINYPNG,
-                "decoded_image": IMAGE_1KB
+                "decoded_image": IMAGE
             }
         ],
         [
             {
                 "payload": {
                     "provider": "krakenio",
-                    "image": str(base64.b64encode(pathlib.Path(
-                        secret.IMAGE_1KB).read_bytes()), "utf-8")
+                    "image": IMAGE
                 },
                 "variables": {
                     "API_KEY": secret.API_KEY_KRAKENIO,
@@ -192,7 +195,7 @@ class TestValidateRequest(unittest.TestCase):
                 "provider": "krakenio",
                 "api_key": secret.API_KEY_KRAKENIO,
                 "api_secret_key": secret.SECRET_API_KEY_KRAKENIO,
-                "decoded_image": IMAGE_1KB
+                "decoded_image": IMAGE
             }
         ]
     ])
@@ -308,14 +311,13 @@ class TestMain(unittest.TestCase):
         # Output validation 1KB
         want = {
             "success": True,
-            "image":
-            pathlib.Path(secret.RESULT_1KB_TINYPNG).read_text(encoding="utf-8")
+            "image": RESULT_TINYPNG
         }
 
         req = MyRequest({
             "payload": {
                 "provider": "tinypng",
-                "image": base64.b64encode(IMAGE_1KB).decode()
+                "image": base64.b64encode(IMAGE).decode()
             },
             "variables": {
                 "API_KEY": secret.API_KEY_TINYPNG
@@ -345,7 +347,7 @@ class TestMain(unittest.TestCase):
         req = MyRequest({
             "payload": {
                 "provider": "tinypng",
-                "image": base64.b64encode(IMAGE_1KB).decode()
+                "image": base64.b64encode(IMAGE).decode()
             },
             "variables": {
                 "API_KEY": "wrong_api_key"
