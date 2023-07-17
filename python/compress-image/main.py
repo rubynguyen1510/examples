@@ -122,7 +122,7 @@ def main(req, res):
     try:
         variables = validate_request(req)
     except (ValueError) as payload_error:
-        return res.json({"success": False, "Value Error": str(payload_error)})
+        return res.json({"success": False, "error": str(payload_error)})
     try:
         optimized_image = IMPLEMENTATIONS[variables["provider"]](variables)
     except Exception as error:
