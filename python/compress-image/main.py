@@ -14,6 +14,7 @@ KRAKEN_USER_AGENT = (
 def krakenio_impl(variables):
     """
     Implements image optimization using the Kraken.io API.
+    
     Input:
         variables (dict): A dictionary containing the
                           required variables for optimization.
