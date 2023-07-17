@@ -55,6 +55,7 @@ def krakenio_impl(variables):
 def tinypng_impl(variables):
     """
     Implements image optimization using the Tinypng API.
+
     Input:
         variables (dict): A dictionary containing the required variables
         for optimization. Includes api_key and decoded_image.
