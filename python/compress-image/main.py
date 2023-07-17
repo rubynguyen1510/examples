@@ -35,11 +35,13 @@ def krakenio_impl(variables):
         "wait": True,  # Optional: Wait for the optimization to complete
         "dev": False,  # Optional: Set to false to enter user mode.
     }
-    response = requests.post(url=KRAKEN_API_ENDPOINT,
-                             headers=headers,
-                             files=files,
-                             data={"data": json.dumps(params)},
-                             timeout=10)
+    response = requests.post(
+        url=KRAKEN_API_ENDPOINT,
+        headers=headers,
+        files=files,
+        json={"data": params},
+        timeout=10,
+    )
     # Check status code of response
     if response.ok:
         # Request successful, parse the response
