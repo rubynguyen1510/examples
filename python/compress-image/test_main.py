@@ -345,7 +345,8 @@ class TestMain(unittest.TestCase):
         # Check the response
         got = res.json()
         self.maxDiff = None
-        self.assertTrue(not got["success"] and "AccountError" in got["error"])
+        self.assertFalse(got["success"])
+        self.assertIn("AccountError", got["error"])
 
 
 # Define a mock request class
