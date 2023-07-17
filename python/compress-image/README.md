@@ -74,7 +74,7 @@ curl http://localhost:3000/ -H "X-Internal-Challenge: secret-key" -H "Content-Ty
 ```
 >KrakenIO Curl Example (Supports API_KEY and SECRET_API_KEY in Environment Variables)
 ```bash
-curl http://localhost:3000/ -H "X-Internal-Challenge: secret-key" -H "Content-Type: application/json" -d '{"payload": {"provider": "krakenio", "image":"iVBORw0KGgoAAAANSUhEUgAAAaQAAALiCAY...QoH9hbkTPQAAAABJRU5ErkJggg=="}, "variables": {"API_KEY": "<YOUR_API_KEY>", "SECRET_API_KEY":"YOUR_SECRET_API_KEY"}}'
+curl http://localhost:3000/ -H "X-Internal-Challenge: secret-key" -H "Content-Type: application/json" -d '{"payload": {"provider": "krakenio", "image": "iVBORw0KGgoAAAANSUhEUgAAAaQAAALiCAY...QoH9hbkTPQAAAABJRU5ErkJggg=="}, "variables": {"API_KEY": "<YOUR_API_KEY>", "SECRET_API_KEY": "<YOUR_SECRET_API_KEY>"}}'
 ```
 ## 📝 Notes
 - This function is designed for use with Appwrite Cloud Functions. You can learn more about it in [Appwrite docs](https://appwrite.io/docs/functions).
