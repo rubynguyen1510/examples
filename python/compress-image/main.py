@@ -33,7 +33,7 @@ def krakenio_impl(variables):
             "api_secret": variables["api_secret_key"]
         },
         "wait": True,  # Optional: Wait for the optimization to complete
-        "dev": False  # Optional: Set to false to enter user mode.
+        "dev": False,  # Optional: Set to false to enter user mode.
     }
     response = requests.post(url=KRAKEN_API_ENDPOINT,
                              headers=headers,
