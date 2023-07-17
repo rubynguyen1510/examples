@@ -128,7 +128,7 @@ def main(req, res):
     except Exception as error:
         return res.json({
             "success": False,
-            "error": f"{str(type(error).__name__)} {str(error)}"
+            "error": f"{type(error).__name__}: {error}"
         })
     return res.json({
         "success": True,
