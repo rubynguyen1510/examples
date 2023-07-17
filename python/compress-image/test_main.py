@@ -1,12 +1,17 @@
-import unittest
+# Standard librar
 import base64
 import pathlib
+import unittest
 from unittest.mock import patch
-import secret
-import tinify
-import main
+
+# Third party
 import requests
+import tinify
 from parameterized import parameterized
+
+# Local imports
+import main
+import secret
 
 IMAGE_1KB = pathlib.Path(secret.IMAGE_1KB).read_bytes()
 RESULT_1KB = (pathlib.Path(secret.RESULT_1KB_TINYPNG).
