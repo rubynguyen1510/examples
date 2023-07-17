@@ -98,8 +98,9 @@ class TestTinypng(unittest.TestCase):
         """Test case handling unexpected 'AccountError' in 'tinypng_impl'"""
         with patch.object(tinify, "from_buffer") as mock_from_buffer:
             # Set up the mock return value as account exception
-            mock_from_buffer.side_effect = \
-                tinify.errors.AccountError("API Key is wrong")
+            mock_from_buffer.side_effect = tinify.errors.AccountError(
+                "API Key is wrong"
+            )
             # Check the raise for Account error
             self.assertRaises(tinify.errors.AccountError,
                               main.tinypng_impl,
