@@ -180,9 +180,10 @@ class TestTinypng(unittest.TestCase):
 
 
 class TestKrakenIO(unittest.TestCase):
-    @unittest.skipIf(not (secret.API_KEY_KRAKENIO
-                          and secret.SECRET_API_KEY_KRAKENIO),
-                     "No KrakenIO API Key or Secret Key")
+    @unittest.skipUnless(
+        secret.API_KEY_KRAKENIO and secret.SECRET_API_KEY_KRAKENIO),
+        "No KrakenIO API Key or Secret Key"
+    )
     def test_krakenio(self):
         """Output validation 1KB."""
         want = RESULT_KRAKENIO
@@ -193,13 +194,14 @@ class TestKrakenIO(unittest.TestCase):
         })
         self.assertEqual(got, base64.b64decode(want))
 
-    @unittest.skipIf(not (secret.API_KEY_KRAKENIO
-                          and secret.SECRET_API_KEY_KRAKENIO),
-                     "No KrakenIO API Key or Secret Key")
+    @unittest.skipUnless(
+        secret.API_KEY_KRAKENIO and secret.SECRET_API_KEY_KRAKENIO),
+        "No KrakenIO API Key or Secret Key"
+    )
     def test_krakenio_time_out(self):
         with patch.object("requests", "post") as mock_post:
             mock_post.side_effect = requests.exceptions.ReadTimeout
-            with self.assertRaises(requests.exceptions.ReadTimeout):
+            self.assertRaises(requests.exceptions.ReadTimeout):
                 main.krakenio_impl({
                     "api_key": secret.API_KEY_KRAKENIO,
                     "api_secret_key": secret.SECRET_API_KEY_KRAKENIO,
