@@ -81,8 +81,8 @@ class TestTinypng(unittest.TestCase):
         """basic functionality of 'tinypng_impl' with a 1kb image"""
         with patch("main.tinify.from_buffer") as mock_from_buffer:
             # Set up the mock return value as decoded result
-            mock_from_buffer.return_value.to_buffer.return_value = \
-                (base64.b64decode(RESULT_1KB))
+            mock_from_buffer.return_value.to_buffer.return_value = (
+                base64.b64decode(RESULT_1KB))
             # Assert the expected result
             optimized_image = main.tinypng_impl({
                 "api_key": secret.API_KEY_TINYPNG,
