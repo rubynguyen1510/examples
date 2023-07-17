@@ -91,7 +91,7 @@ class TestTinypng(unittest.TestCase):
             # Check if the return type is a string
             self.assertIsInstance(optimized_image, bytes)
             # Check if the assert equals and is correct
-            self.assertEqual(optimized_image, (mock_from_buffer.return_value.to_buffer.return_value))
+            self.assertEqual(optimized_image, mock_from_buffer.return_value.to_buffer.return_value)
 
     @unittest.skipIf(not secret.API_KEY_TINYPNG, "No Tinypng API Key set")
     def test_tinypng_impl_unexpected_exception_account_error(self):
