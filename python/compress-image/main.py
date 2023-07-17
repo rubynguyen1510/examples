@@ -130,10 +130,10 @@ def main(req, res):
     """
     try:
         variables = validate_request(req)
-    except (ValueError) as payload_error:
+    except (ValueError) as value_error:
         return res.json({
             "success": False,
-            "error": f"{payload_error}",
+            "error": f"{value_error}",
         })
     try:
         optimized_image = IMPLEMENTATIONS[variables["provider"]](variables)
