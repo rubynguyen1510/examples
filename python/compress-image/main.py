@@ -21,7 +21,8 @@ def krakenio_impl(variables):
     Returns:
         bytes: decoded optimized image.
     Raises:
-        raise_for_status(): If response is not successful.
+        raise_for_status(): raise an HTTPError if the HTTP request
+        returned an unsuccessful status code.
     """
     optimized_image = None
     # Headers for post request
