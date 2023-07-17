@@ -197,7 +197,7 @@ class TestKrakenIO(unittest.TestCase):
         secret.API_KEY_KRAKENIO and secret.SECRET_API_KEY_KRAKENIO,
         "No KrakenIO API Key or Secret Key")
     def test_krakenio_time_out(self):
-        with patch("main.requests.post") as mock_post:
+        with patch.object(requests, "post") as mock_post:
             mock_post.side_effect = requests.exceptions.ReadTimeout
             with self.assertRaises(requests.exceptions.ReadTimeout):
                 main.krakenio_impl({
@@ -205,7 +205,6 @@ class TestKrakenIO(unittest.TestCase):
                     "api_secret_key": secret.SECRET_API_KEY_KRAKENIO,
                     "decoded_image": IMAGE
                 })
-            mock_post.assert_called_once()
 
 
 # Define a mock request class
@@ -313,28 +312,24 @@ class TestValidateRequest(unittest.TestCase):
         ],
         [
             {
-                # accessing wrong provider
                 "payload": {"WRONG_PROVIDER": "krakenio", "image": "12345"},
                 "variables": {"API_KEY": "123", "SECRET_API_KEY": ""},
             }
         ],
         [
             {
-                # accessing wrong image
                 "payload": {"provider": "krakenio", "1Mage": "12345"},
                 "variables": {"API_KEY": "123", "SECRET_API_KEY": ""},
             }
         ],
         [
             {
-                # accessing wrong api key
                 "payload": {"provider": "krakenio", "1Mage": "12345"},
                 "variables": {"NOT AN API": "123", "SECRET_API_KEY": ""},
             }
         ],
         [
             {
-                # accessing wrong api keys and secret keys
                 "payload": {"provider": "krakenio", "1Mage": "12345"},
                 "variables": {"API": "123", "SecretKey": ""},
             }

@@ -41,16 +41,18 @@ def krakenio_impl(variables):
         url=KRAKEN_API_ENDPOINT,
         headers=headers,
         files=files,
-        json={"data": params},
+        data={"data": json.dumps(params)},
         timeout=10,
     )
     # Check status code of response
     response.raise_for_status()
     # Request successful, parse the response
     data = response.json()
-    if data["success"]:
-        optimized_url = data["kraked_url"]
-        optimized_image = requests.get(optimized_url, timeout=10).content
+    if not data["success"]:
+        raise ValueError("KrakenIO was not able to compress image.")
+    optimized_url = data["kraked_url"]
+    optimized_image = requests.get(optimized_url, timeout=10).content
+
     return optimized_image
 
 
