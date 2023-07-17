@@ -38,17 +38,20 @@ class TestTinypng(unittest.TestCase):
                            "decoded_image": IMAGE_1KB})
 
     @unittest.skipIf(not secret.API_KEY_TINYPNG, "No Tinypng API Key set")
-    def test_tinypng_client(self):
+    @parameterized([
+        (b"",),
+        (b"ORw0KGgoAAAANSUhEUgAAABEAAAAOCAMAAAD+M",),
+    ])
+    def test_tinypng_client(self, image):
         """Test case for Client errors in the 'tinypng_impl' function."""
         # Image is Empty
-        self.assertRaises(tinify.errors.ClientError, main.tinypng_impl,
-                          {"api_key": secret.API_KEY_TINYPNG,
-                           "decoded_image": b""})
-        # Corrupted Image
-        self.assertRaises(tinify.errors.ClientError, main.tinypng_impl,
-                          {"api_key": secret.API_KEY_TINYPNG,
-                           "decoded_image":
-                           b"ORw0KGgoAAAANSUhEUgAAABEAAAAOCAMAAAD+M"})
+        data = {
+            "api_key": secret.API_KEY_TINYPNG,
+            "decoded_image": image,
+        }
+
+        with self.assertRaises(tinify.errors.ClientError):
+            main.tinypng_impl(data)
 
     @unittest.skipIf(not secret.API_KEY_TINYPNG, "No Tinypng API Key set")
     def test_tinypng_keys(self):
