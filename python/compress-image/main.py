@@ -63,9 +63,7 @@ def tinypng_impl(variables):
         bytes: decoded optimized image.
     """
     tinify.key = variables["api_key"]
-    optimized_image = (tinify.from_buffer(
-        variables["decoded_image"]).to_buffer())
-    return optimized_image
+    return tinify.from_buffer(variables["decoded_image"]).to_buffer()
 
 
 def validate_request(req):
