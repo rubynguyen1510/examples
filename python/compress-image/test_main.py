@@ -96,7 +96,7 @@ class TestTinypng(unittest.TestCase):
     @unittest.skipIf(not secret.API_KEY_TINYPNG, "No Tinypng API Key set")
     def test_tinypng_impl_unexpected_exception_account_error(self):
         """Test case handling unexpected 'AccountError' in 'tinypng_impl'"""
-        with patch("main.tinify.from_buffer") as mock_from_buffer:
+        with patch.object(tinify, "from_buffer") as mock_from_buffer:
             # Set up the mock return value as account exception
             mock_from_buffer.side_effect = \
                 tinify.errors.AccountError("API Key is wrong")
