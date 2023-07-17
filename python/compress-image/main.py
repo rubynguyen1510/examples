@@ -5,13 +5,16 @@ import tinify
 import requests
 
 KRAKEN_API_ENDPOINT = "https://api.kraken.io/v1/upload"
-KRAKEN_USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; Win64; x64)AppleWebKit/\
-                537.36(KHTML, like Gecko)Chrome/40.0.2214.85 Safari/537.36"
+KRAKEN_USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 6.1; Win64; x64)AppleWebKit/"
+    "537.36(KHTML, like Gecko)Chrome/40.0.2214.85 Safari/537.36"
+)
 
 
 def krakenio_impl(variables):
     """
     Implements image optimization using the Kraken.io API.
+    
     Input:
         variables (dict): A dictionary containing the
                           required variables for optimization.
@@ -30,26 +33,29 @@ def krakenio_impl(variables):
             "api_secret": variables["api_secret_key"]
         },
         "wait": True,  # Optional: Wait for the optimization to complete
-        "dev": False  # Optional: Set to false to enter user mode.
+        "dev": False,  # Optional: Set to false to enter user mode.
     }
-    response = requests.post(url=KRAKEN_API_ENDPOINT,
-                             headers=headers,
-                             files=files,
-                             data={"data": json.dumps(params)},
-                             timeout=10)
+    response = requests.post(
+        url=KRAKEN_API_ENDPOINT,
+        headers=headers,
+        files=files,
+        json={"data": params},
+        timeout=10,
+    )
     # Check status code of response
-    if response.ok:
-        # Request successful, parse the response
-        data = response.json()
-        if data["success"]:
-            optimized_url = data["kraked_url"]
-            optimized_image = requests.get(optimized_url, timeout=10).content
+    response.raise_for_status()
+    # Request successful, parse the response
+    data = response.json()
+    if data["success"]:
+        optimized_url = data["kraked_url"]
+        optimized_image = requests.get(optimized_url, timeout=10).content
     return optimized_image
 
 
 def tinypng_impl(variables):
     """
     Implements image optimization using the Tinypng API.
+
     Input:
         variables (dict): A dictionary containing the required variables
         for optimization. Includes api_key and decoded_image.
@@ -57,14 +63,13 @@ def tinypng_impl(variables):
         bytes: decoded optimized image.
     """
     tinify.key = variables["api_key"]
-    optimized_image = (tinify.from_buffer(
-        variables["decoded_image"]).to_buffer())
-    return optimized_image
+    return tinify.from_buffer(variables["decoded_image"]).to_buffer()
 
 
 def validate_request(req):
     """
     Validates the request and extracts the necessary information.
+
     Input:
         req: The request object containing the payload and variables.
     Returns:
@@ -117,13 +122,13 @@ def main(req, res):
     try:
         variables = validate_request(req)
     except (ValueError) as payload_error:
-        return res.json({"success": False, "Value Error": str(payload_error)})
+        return res.json({"success": False, "error": str(payload_error)})
     try:
         optimized_image = IMPLEMENTATIONS[variables["provider"]](variables)
     except Exception as error:
         return res.json({
             "success": False,
-            "error": f"{str(type(error).__name__)} {str(error)}"
+            "error": f"{type(error).__name__}: {error}"
         })
     return res.json({
         "success": True,
