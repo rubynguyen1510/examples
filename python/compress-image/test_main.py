@@ -295,8 +295,7 @@ class TestMain(unittest.TestCase):
     def test_main_success(self):
         # Output validation 1KB
         want = {
-            "success":
-            True,
+            "success": True,
             "image":
             pathlib.Path(secret.RESULT_1KB_TINYPNG).read_text(encoding="utf-8")
         }
