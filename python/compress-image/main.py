@@ -69,6 +69,7 @@ def tinypng_impl(variables):
 def validate_request(req):
     """
     Validates the request and extracts the necessary information.
+
     Input:
         req: The request object containing the payload and variables.
     Returns:
