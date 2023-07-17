@@ -24,8 +24,10 @@ class TestTinypng(unittest.TestCase):
     def test_tinypng_small(self):
         """Test case optimizing 1kb image using 'tinypng_impl' function."""
         want = RESULT_1KB
-        got = main.tinypng_impl({"api_key": secret.API_KEY_TINYPNG,
-                                 "decoded_image": IMAGE_1KB})
+        got = main.tinypng_impl({
+            "api_key": secret.API_KEY_TINYPNG,
+            "decoded_image": IMAGE_1KB,
+        })
         self.assertEqual(base64.b64encode(got).decode(), want)
 
     def test_tinypng_credential(self):
