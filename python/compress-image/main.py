@@ -17,9 +17,11 @@ def krakenio_impl(variables):
     
     Input:
         variables (dict): A dictionary containing the
-                          required variables for optimization.
+        required variables for optimization.
     Returns:
         bytes: decoded optimized image.
+    Raises:
+        raise_for_status(): If response is not successful.
     """
     optimized_image = None
     # Headers for post request
@@ -61,6 +63,9 @@ def tinypng_impl(variables):
         for optimization. Includes api_key and decoded_image.
     Returns:
         bytes: decoded optimized image.
+    Raises:
+        tinify.errors.AccountError: If credentials are invalid.
+        tinify.errors.ClientError: If image is invalid.
     """
     tinify.key = variables["api_key"]
     return tinify.from_buffer(variables["decoded_image"]).to_buffer()
