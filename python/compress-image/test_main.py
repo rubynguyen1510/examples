@@ -181,7 +181,7 @@ class TestTinypng(unittest.TestCase):
 
 class TestKrakenIO(unittest.TestCase):
     @unittest.skipUnless(
-        secret.API_KEY_KRAKENIO and secret.SECRET_API_KEY_KRAKENIO),
+        secret.API_KEY_KRAKENIO and secret.SECRET_API_KEY_KRAKENIO,
         "No KrakenIO API Key or Secret Key"
     )
     def test_krakenio(self):
@@ -195,7 +195,7 @@ class TestKrakenIO(unittest.TestCase):
         self.assertEqual(got, base64.b64decode(want))
 
     @unittest.skipUnless(
-        secret.API_KEY_KRAKENIO and secret.SECRET_API_KEY_KRAKENIO),
+        secret.API_KEY_KRAKENIO and secret.SECRET_API_KEY_KRAKENIO,
         "No KrakenIO API Key or Secret Key"
     )
     def test_krakenio_time_out(self):
