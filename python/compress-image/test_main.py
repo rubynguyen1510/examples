@@ -76,7 +76,7 @@ class TestTinypng(unittest.TestCase):
         self.assertRaises(KeyError, main.tinypng_impl,
                           {"api_key": secret.API_KEY_TINYPNG})
 
-    @unittest.skipIf(not secret.API_KEY_TINYPNG, "No Tinypng API Key set")
+    @unittest.skipUnless(secret.API_KEY_TINYPNG, "No Tinypng API Key set")
     def test_tinypng_impl_basic_functionality_1kb(self):
         """basic functionality of 'tinypng_impl' with a 1kb image"""
         with patch("main.tinify.from_buffer") as mock_from_buffer:
