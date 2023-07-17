@@ -246,7 +246,7 @@ class TestValidateRequest(unittest.TestCase):
         req = MyRequest({
             "payload": got["payload"],
             "variables": got["variables"]
-            })
+        })
         with self.assertRaises(ValueError) as context:
             main.validate_request(req)
             self.assertEqual(str(context.exception), want)
