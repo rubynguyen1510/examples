@@ -51,7 +51,7 @@ class TestTinypng(unittest.TestCase):
         )
 
     @unittest.skipIf(not secret.API_KEY_TINYPNG, "No Tinypng API Key set")
-    @parameterized([
+    @parameterized.expand([
         (b"",),
         (b"ORw0KGgoAAAANSUhEUgAAABEAAAAOCAMAAAD+M",),
     ])
@@ -386,7 +386,7 @@ class TestMain(unittest.TestCase):
         self.assertEqual(got, want)
 
     def test_main_value_error(self):
-        want = {"success": False, "Value Error": "Missing payload"}
+        want = {"success": False, "error": "Missing payload"}
         req = MyRequest({"payload": {}, "variables": {}})
         res = MyResponse()  # Create a response object
         main.main(req, res)
