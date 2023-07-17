@@ -20,7 +20,7 @@ RESULT_1KB = (pathlib.Path(secret.RESULT_1KB_TINYPNG).
 
 class TestTinypng(unittest.TestCase):
     """Class for testing the functionality of the 'tinypng_impl' function."""
-    @unittest.skipIf(not secret.API_KEY_TINYPNG, "No Tinypng API Key set")
+    @unittest.skipUnless(secret.API_KEY_TINYPNG, "No Tinypng API Key set")
     def test_tinypng_small(self):
         """Test case optimizing 1kb image using 'tinypng_impl' function."""
         want = RESULT_1KB
