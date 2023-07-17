@@ -86,7 +86,8 @@ class TestTinypng(unittest.TestCase):
             # Assert the expected result
             optimized_image = main.tinypng_impl({
                 "api_key": secret.API_KEY_TINYPNG,
-                "decoded_image": IMAGE_1KB})
+                "decoded_image": IMAGE_1KB,
+            })
             # Check if the return type is a string
             self.assertIsInstance(optimized_image, bytes)
             # Check if the assert equals and is correct
