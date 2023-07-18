@@ -70,11 +70,11 @@ Your function is now listening on port `3000`, and you can execute it by sending
 4. Run the cURL function to send request.
 >TinyPNG Curl Example (Supports only API_KEY in Environment Variables)
 ```bash
-curl http://localhost:3000/ -H "X-Internal-Challenge: secret-key" -H "Content-Type: application/json" -d '{"payload":{"provider":"tinypng","image":"iVBORw0KGgoAAAANSUhEUgAAAaQAAALiCAY...QoH9hbkTPQAAAABJRU5ErkJggg=="}, "variables": {"API_KEY": "<YOUR_API_KEY>"}}'
+curl http://localhost:3000/ -H "X-Internal-Challenge: secret-key" -H "Content-Type: application/json" -d '{"payload": {"provider": "tinypng", "image": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+L+U4T8ABu8CpCYJ1DQAAAAASUVORK5CYII="}, "variables": {"API_KEY": "<YOUR_API_KEY>"}}'
 ```
 >KrakenIO Curl Example (Supports API_KEY and SECRET_API_KEY in Environment Variables)
 ```bash
-curl http://localhost:3000/ -H "X-Internal-Challenge: secret-key" -H "Content-Type: application/json" -d '{"payload": {"provider": "krakenio", "image": "iVBORw0KGgoAAAANSUhEUgAAAaQAAALiCAY...QoH9hbkTPQAAAABJRU5ErkJggg=="}, "variables": {"API_KEY": "<YOUR_API_KEY>", "SECRET_API_KEY": "<YOUR_SECRET_API_KEY>"}}'
+curl http://localhost:3000/ -H "X-Internal-Challenge: secret-key" -H "Content-Type: application/json" -d '{"payload": {"provider": "krakenio", "image": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+L+U4T8ABu8CpCYJ1DQAAAAASUVORK5CYII="}, "variables": {"API_KEY": "<YOUR_API_KEY>", "SECRET_API_KEY": "<YOUR_SECRET_API_KEY>"}}'
 ```
 ## 📝 Notes
 - This function is designed for use with Appwrite Cloud Functions. You can learn more about it in [Appwrite docs](https://appwrite.io/docs/functions).
